@@ -34,6 +34,9 @@ class MASAC(nn.Module):
         self.alpha_optimizer = torch.optim.Adam([self.log_alpha], lr=config['alpha_lr'])
         self.target_entropy = torch.tensor([-size for size in self.action_dims], device=device, dtype=torch.float32)
         self.updates = 0
+        self.critic_optimizer_updates = 0
+        self.actor_optimizer_updates = [0, 0]
+        self.alpha_optimizer_updates = 0
 
     @torch.no_grad()
     def initialize_log_std(self, value):
@@ -120,6 +123,7 @@ class MASAC(nn.Module):
         q_grad = self._gradient_norm(list(self.q1.parameters()) + list(self.q2.parameters()))
         require_finite('critic loss/gradient', loss_q.item(), q_grad)
         self.q_optimizer.step()
+        self.critic_optimizer_updates += 1
         self.q_optimizer.zero_grad(set_to_none=True)
         if update_actor:
             actor_losses, log_probs, actor_grads = [], [], []
@@ -141,6 +145,7 @@ class MASAC(nn.Module):
                     actor_grads.append(self._gradient_norm(self.actors[i].parameters()))
                     require_finite('actor loss/gradient', loss.item(), actor_grads[-1])
                     optimizer.step()
+                    self.actor_optimizer_updates[i] += 1
                     optimizer.zero_grad(set_to_none=True)
                     actor_losses.append(loss.detach())
                     log_probs.append(log_prob.detach())
@@ -152,6 +157,7 @@ class MASAC(nn.Module):
                 self.alpha_optimizer.zero_grad(set_to_none=True)
                 alpha_loss.backward()
                 self.alpha_optimizer.step()
+                self.alpha_optimizer_updates += 1
             else:
                 alpha_loss = torch.zeros((), device=self.device)
         else:
@@ -181,10 +187,18 @@ class MASAC(nn.Module):
                             f'entropy_{i}': -log_probs[i].mean().item()})
         if 'fine_tune' in self.config:
             metrics.update(actor_updated=int(update_actor), bc_loss_0=bc_losses[0].item(), bc_loss_1=bc_losses[1].item())
+        metrics.update(self.optimizer_counts())
         require_finite('MASAC metrics', *metrics.values())
         if min(metrics['alpha_0'], metrics['alpha_1']) <= 0:
             raise FloatingPointError('Alpha underflowed to zero')
         return metrics
+
+    def optimizer_counts(self):
+        return dict(critic_optimizer_updates=self.critic_optimizer_updates,
+                    actor_optimizer_updates_0=self.actor_optimizer_updates[0],
+                    actor_optimizer_updates_1=self.actor_optimizer_updates[1],
+                    actor_optimizer_steps_total=sum(self.actor_optimizer_updates),
+                    alpha_optimizer_updates=self.alpha_optimizer_updates)
 
     @staticmethod
     def _gradient_norm(parameters):
