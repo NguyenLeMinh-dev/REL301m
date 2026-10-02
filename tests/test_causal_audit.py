@@ -259,3 +259,25 @@ def test_additional_entropy_and_BC_only_diagnostics_keep_settings_and_counts(tmp
     assert model.config==before
     assert model.optimizer_counts()==dict(critic_optimizer_updates=1,actor_optimizer_updates_0=1,
         actor_optimizer_updates_1=1,actor_optimizer_steps_total=2,alpha_optimizer_updates=1)
+
+
+def test_fixed_std_entropy_bound_and_mean_pressure_oppose_saturated_expert_action():
+    import math
+    from rel301m.algorithms.networks import GaussianActor
+    actor=GaussianActor(66,np.full(7,-1.),np.full(7,1.),hidden_dims=[16,16])
+    with torch.no_grad():
+        for parameter in actor.parameters(): parameter.zero_()
+        actor.net[-1].bias[:7].fill_(3.)
+    actor.fixed_log_std=-3
+    observations=torch.zeros(1024,66)
+    _,log_prob=actor.sample(observations)
+    entropy_gradient=torch.autograd.grad(.02*log_prob.mean(),actor.net[-1].bias)[0]
+    mean,_=actor(observations)
+    bc_gradient=torch.autograd.grad(.5*(mean.tanh()-1).square().mean(),actor.net[-1].bias)[0]
+    # Gaussian entropy is an upper bound: tanh's log Jacobian is nonpositive for unit scale.
+    entropy_upper_bound=7*(.5*math.log(2*math.pi*math.e)-3)
+    assert entropy_upper_bound < -7
+    np.testing.assert_allclose(entropy_upper_bound,-11.06743026756729,rtol=0,atol=1e-10)
+    assert torch.all(entropy_gradient[:7]>.039)
+    assert torch.all(bc_gradient[:7]<0)
+    assert torch.count_nonzero(entropy_gradient[7:])==torch.count_nonzero(bc_gradient[7:])==0
