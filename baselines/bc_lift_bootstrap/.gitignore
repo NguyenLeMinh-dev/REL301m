@@ -1,0 +1,10 @@
+data/
+runs/
+checkpoints/
+videos/
+logs/
+*.npz
+*.zip
+*.pt
+*.mp4
+MUJOCO_LOG.TXT
