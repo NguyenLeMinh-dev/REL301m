@@ -118,6 +118,13 @@ def train(args):
                         break
         if state_hash(model.critic) != critic_before or any(p.grad is not None for p in model.critic.parameters()):
             raise RuntimeError("BC unexpectedly changed or differentiated the critic")
+        # Check same-device deterministic action preservation separately from
+        # any stochastic policy/teacher equivalence claim.
+        obs, _ = env.reset()
+        last_expected, _ = model.predict(obs, deterministic=True)
+        last_restored = SAC.load(checkpoints/"last_bc.zip", env=env, device=model.device)
+        last_actual, _ = last_restored.predict(obs, deterministic=True)
+        np.testing.assert_array_equal(last_actual, last_expected)
         best_model = SAC.load(checkpoints/"best_bc.zip", env=env, device=model.device)
         shutil.copyfile(checkpoints/"best_bc.zip", checkpoints/"bc_sac_warmstart.zip")
         torch.save(best_model.actor.state_dict(), checkpoints/"bc_actor_state_dict.pt")
@@ -125,7 +132,7 @@ def train(args):
         predicted, _ = best_model.predict(obs, deterministic=True)
         if predicted.dtype != np.float32 or not env.action_space.contains(predicted):
             raise ValueError("Reloaded BC action outside live space")
-        summary.update(status="completed", critic_unchanged=True, checkpoint_format="Stable-Baselines3 SAC .zip",
+        summary.update(status="completed", critic_unchanged=True, deterministic_save_reload_preserved=True, deterministic_save_reload_max_abs_error=float(np.max(np.abs(last_actual-last_expected))), checkpoint_format="Stable-Baselines3 SAC .zip",
                        best_checkpoint_sha256=sha256(checkpoints/"best_bc.zip"))
         write_json(args.run_dir/"summary.json", summary)
         print(f"BC_TRAIN=PASS epochs={summary['completed_epochs']} best_epoch={best_epoch} best_val_loss={best:.6f} train_episodes={len(train_eps)} val_episodes={len(val_eps)}")

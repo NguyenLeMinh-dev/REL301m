@@ -2,10 +2,11 @@
 from common import checked_action
 from env import make_lift_env
 import numpy as np
+import hashlib
 
 
-def run_episode(model, seed, *, assist_distance, horizon=500, observer=None):
-    env = make_lift_env(seed, horizon=horizon, assist_distance=assist_distance)
+def run_episode(model, seed, *, assist_distance, horizon=500, observer=None, mode="assisted"):
+    env = make_lift_env(seed, horizon=horizon, assist_distance=assist_distance, mode=mode)
     try:
         obs, reset_info = env.reset()
         if obs.dtype != np.float32 or not np.isfinite(obs).all():
@@ -13,6 +14,7 @@ def run_episode(model, seed, *, assist_distance, horizon=500, observer=None):
         trajectory = {k: [] for k in ("observations", "actions", "executed_actions", "policy_actions", "next_observations",
                                      "rewards", "steps", "dones", "terminated", "truncated", "current_success",
                                      "distance_to_cube", "cube_height", "grasp", "assist_active")}
+        initial_hash = hashlib.sha256(obs.tobytes()+env.unwrapped.sim.data.qpos.tobytes()+env.unwrapped.sim.data.qvel.tobytes()).hexdigest()
         first = 0 if reset_info["current_success"] else None
         ever_grasp, total, info = False, 0., reset_info
         for step in range(horizon):
@@ -40,8 +42,10 @@ def run_episode(model, seed, *, assist_distance, horizon=500, observer=None):
             obs = next_obs
         result = {"seed": int(seed), "episode_return": total, "ever_success": bool(info["is_success"]),
                   "final_success": bool(info["current_success"]), "first_success_step": first,
-                  "episode_length": horizon, "ever_grasp": ever_grasp,
-                  "premature_close_count": sum(bool(a[6] > 0 and active) for a, active in zip(trajectory["policy_actions"], trajectory["assist_active"]))}
+                  "episode_length": horizon, "ever_grasp": ever_grasp, "initial_success": bool(reset_info["current_success"]),
+                  "initial_state_sha256": initial_hash, "evaluation_mode": mode,
+                  "gripper_override_count": sum(bool(a[6] != e[6]) for a, e in zip(trajectory["policy_actions"], trajectory["executed_actions"])),
+                  "premature_close_count": sum(bool(a[6] > 0 and distance > assist_distance) for a, distance in zip(trajectory["policy_actions"], trajectory["distance_to_cube"]))}
         return trajectory, result
     finally:
         env.close()

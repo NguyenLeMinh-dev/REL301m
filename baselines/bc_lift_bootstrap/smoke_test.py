@@ -1,5 +1,5 @@
 """Real environment/actor/action-recorder/serialization smoke; no fake demos."""
-from common import verify_stack, package_versions
+from common import verify_stack, git_sha
 from env import make_lift_env, environment_contract
 from train_bc import make_model
 
@@ -52,6 +52,7 @@ def main():
         print(f"TORCH={versions['torch']} CUDA_AVAILABLE={torch.cuda.is_available()}")
         print("EXECUTED_ACTION_CAPTURE=PASS BC_OPTIMIZER_STEP=PASS SAVE_RELOAD_PREDICT=PASS")
         print("Short real trajectory exercises collector-compatible fields; it is not labelled successful or saved as a demonstration.")
+        print(f"GIT_COMMIT={git_sha()}")
         print("BC_SMOKE=PASS")
     finally:
         env.close()

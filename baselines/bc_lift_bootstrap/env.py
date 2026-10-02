@@ -33,11 +33,28 @@ class ExecutedActionRecorder(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 
-def make_lift_env(seed, *, horizon=DEFAULT_HORIZON, assist_distance=DEFAULT_ASSIST_DISTANCE):
+class UnassistedDiagnostics(gym.Wrapper):
+    """Measure native state while forwarding the policy action unchanged."""
+    def step(self, action):
+        raw = self.env.unwrapped
+        distance = float(raw._gripper_to_target(gripper=raw.robots[0].gripper, target=raw.cube.root_body,
+                                               target_type="body", return_distance=True))
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        info = dict(info)
+        info.update(assist_active=False, distance_to_cube_m=distance,
+                    policy_gripper_action=float(action[6]), executed_gripper_action=float(info["executed_action"][6]),
+                    grasping=bool(raw._check_grasp(gripper=raw.robots[0].gripper, object_geoms=raw.cube)),
+                    cube_height_m=float(raw.sim.data.body_xpos[raw.cube_body_id][2]))
+        return obs, reward, terminated, truncated, info
+
+
+def make_lift_env(seed, *, horizon=DEFAULT_HORIZON, assist_distance=DEFAULT_ASSIST_DISTANCE, mode="assisted"):
+    if mode not in ("assisted", "unassisted"):
+        raise ValueError(f"Unknown environment mode: {mode}")
     env = _make(seed, horizon=horizon, assist_distance=assist_distance)
-    cursor = env
+    parent, cursor = None, env
     while hasattr(cursor, "env") and not isinstance(cursor, OpenUntilCloseWrapper):
-        cursor = cursor.env
+        parent, cursor = cursor, cursor.env
     if not isinstance(cursor, OpenUntilCloseWrapper):
         env.close()
         raise RuntimeError("Copied source does not contain the expected assistance wrapper")
@@ -45,15 +62,19 @@ def make_lift_env(seed, *, horizon=DEFAULT_HORIZON, assist_distance=DEFAULT_ASSI
         env.close()
         raise RuntimeError(f"Live gripper action layout mismatch: {cursor.gripper_slice}")
     cursor.env = ExecutedActionRecorder(cursor.env)
+    if mode == "unassisted":
+        # Remove only OpenUntilCloseWrapper; all native environment settings and
+        # outer success/TimeLimit/float32 wrappers are preserved.
+        parent.env = UnassistedDiagnostics(cursor.env)
     try:
-        environment_contract(env, assist_distance=assist_distance, horizon=horizon)
+        environment_contract(env, assist_distance=assist_distance, horizon=horizon, mode=mode)
     except Exception:
         env.close()
         raise
     return env
 
 
-def environment_contract(env, *, assist_distance=DEFAULT_ASSIST_DISTANCE, horizon=DEFAULT_HORIZON):
+def environment_contract(env, *, assist_distance=DEFAULT_ASSIST_DISTANCE, horizon=DEFAULT_HORIZON, mode="assisted"):
     raw = env.unwrapped
     info = raw.robots[0].composite_controller.get_action_info_dict()
     arm = raw.robots[0].part_controllers["right"]
@@ -72,4 +93,4 @@ def environment_contract(env, *, assist_distance=DEFAULT_ASSIST_DISTANCE, horizo
             "horizon": horizon, "control_freq": int(raw.control_freq), "reward_shaping": bool(raw.reward_shaping),
             "reward_scale": float(raw.reward_scale), "use_camera_obs": bool(raw.use_camera_obs),
             "use_object_obs": bool(raw.use_object_obs), "assist_distance": float(assist_distance),
-            "evaluation_mode": "stage1_assisted", "termination": "TimeLimit truncation, native success does not terminate"}
+            "evaluation_mode": mode, "gripper_assistance": mode == "assisted", "termination": "TimeLimit truncation, native success does not terminate"}
