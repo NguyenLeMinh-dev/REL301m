@@ -61,7 +61,7 @@ Outputs under the new run directory:
 
 Critics and temperature remain random/untrained. The std head has no direct deterministic BC supervision; shared-feature changes can still change stochastic outputs. **Deterministic BC does not calibrate stochastic SAC exploration** or match the teacher's stochastic policy. No log_std schedule/initialization is changed here. Save/reload regression records deterministic-action preservation on the same device; it does not assert stochastic equivalence to the teacher. A compatible `bc_sac_warmstart.zip` **does not establish safe BC→SAC fine-tuning**.
 
-`watch.sh` opens a native MuJoCo passive viewer and prints distance, policy/executed gripper, grasp, cube height and success. Run it from a graphical desktop. `--headless` exercises diagnostics without opening a window; that mode was tested here, the interactive GUI was not validated in this session.
+`watch.sh` opens a native MuJoCo passive viewer and prints distance, policy/executed gripper, grasp, cube height and success. Run it from a graphical desktop. `--headless` exercises diagnostics without opening a window; headless mode was tested in the earlier baseline acceptance and was not re-run in this follow-up. The interactive GUI has not been validated.
 
 ## Completed acceptance
 

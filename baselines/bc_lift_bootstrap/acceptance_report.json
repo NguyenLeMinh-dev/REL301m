@@ -1,5 +1,771 @@
 {
-  "status": "PENDING_POST_COMMIT_ACCEPTANCE",
+  "BC_BRANCH_CLEAN": "YES",
+  "BC_PIPELINE_READY": "YES",
+  "SMOKE": "PASS",
+  "REGRESSION": "PASS",
+  "SUSTAINED_DEMOS_COLLECTED": 2,
+  "ASSISTED_BC_EVAL": {
+    "ever_success": "0/2",
+    "final_success": "0/2"
+  },
+  "UNASSISTED_BC_EVAL": {
+    "ever_success": "0/2",
+    "final_success": "0/2"
+  },
+  "FILES_CHANGED_VS_MAIN": [
+    "baselines/bc_lift_bootstrap/.gitignore",
+    "baselines/bc_lift_bootstrap/README.md",
+    "baselines/bc_lift_bootstrap/VERIFICATION.md",
+    "baselines/bc_lift_bootstrap/acceptance_report.json",
+    "baselines/bc_lift_bootstrap/assisted_env.py",
+    "baselines/bc_lift_bootstrap/collect.sh",
+    "baselines/bc_lift_bootstrap/collect_demos.py",
+    "baselines/bc_lift_bootstrap/common.py",
+    "baselines/bc_lift_bootstrap/dataset.py",
+    "baselines/bc_lift_bootstrap/env.py",
+    "baselines/bc_lift_bootstrap/environment_source.json",
+    "baselines/bc_lift_bootstrap/eval_bc.sh",
+    "baselines/bc_lift_bootstrap/evaluate_bc.py",
+    "baselines/bc_lift_bootstrap/inspect_dataset.py",
+    "baselines/bc_lift_bootstrap/install.sh",
+    "baselines/bc_lift_bootstrap/preflight.py",
+    "baselines/bc_lift_bootstrap/requirements.txt",
+    "baselines/bc_lift_bootstrap/rollout.py",
+    "baselines/bc_lift_bootstrap/runtime_guard.py",
+    "baselines/bc_lift_bootstrap/smoke.sh",
+    "baselines/bc_lift_bootstrap/smoke_test.py",
+    "baselines/bc_lift_bootstrap/test_contract.py",
+    "baselines/bc_lift_bootstrap/train_bc.py",
+    "baselines/bc_lift_bootstrap/train_bc.sh",
+    "baselines/bc_lift_bootstrap/watch.sh",
+    "baselines/bc_lift_bootstrap/watch_bc.py"
+  ],
+  "COMMIT_SHA": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+  "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+  "acceptance_commit_sha": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
   "branch": "baseline/bc-lift-bootstrap-clean",
-  "note": "Legacy untracked-worktree acceptance is superseded. Run updated code only after its commit."
+  "base_main_sha": "6bc872c13830a7ee1e105f6fd717a63837c66eee",
+  "validation_time": "2026-10-03T00:45:16.524882+07:00",
+  "provenance": "Every acceptance stage ran after implementation commit at this SHA with BC tracked worktree clean. A later report-only commit does not change tested code.",
+  "source_files_sha256": {
+    "environment_source.json": "98dd33046b516c5320accb4d946a27464e86706526b6966680694244c5036cfa",
+    "collect_demos.py": "c3728099203ec0607307fa769827f55eff7cf8955ab38d97cb7250c57fb97d99",
+    "evaluate_bc.py": "ecb35c4bd71e8e6eeb1e683b429bf8c427f3aa5bdcd1039a6634c108362bffd5",
+    "collect.sh": "6cc59f23067586b949abd1b2faae56760ed019d8f8e8ba500d015a75e511fc2d",
+    "smoke_test.py": "1e5291e1798ff70345e498053f316c5455ca5f6bf08a98b8526a0ae24d9a2abe",
+    "watch_bc.py": "447ad0b2d4e0865c94ccf59976e59bdad4c0f3945e0489d4a32e7d2e6b0a1377",
+    "smoke.sh": "58436bf486b9295ce8c18b7cf46ae9873e8796dc3f1dee23fa926aedbc55afb6",
+    "preflight.py": "d62874b3f29fc0361f10057c2d5d0e4159621ccb515410f5f68d1a5342676b4e",
+    "watch.sh": "a117b2ed10dbe64fad7f5c5312d5f02a6c629a7285a8f4b65ca447840aeed978",
+    "dataset.py": "51d4ba0305a10c90934202ed56e470152e87f50cb94e2f14d5b517c1013b8629",
+    "inspect_dataset.py": "bb463acb2d6640459c15723fa8158531a0a252d96b5fab4ed3bf9568759230ae",
+    "train_bc.py": "e46b8111fb3f28f6ecfdefa8bf9aac8ee03ff964e27cb00b55318f337959135d",
+    "rollout.py": "adb1cb24e0bb1cebc2597b408bed293bb2a7ad86c1a844060e4d45028b9993bd",
+    "train_bc.sh": "3783187bebec9b9dc559a04ba8de923bab671d455eb994e17878b2e84d3dbc7b",
+    "test_contract.py": "0f98bb07d3a334ba462c099fae84fcb40711dad51748c8d76a7080c6bf2a0b6a",
+    "env.py": "baec0fb7d8c7203031c7750ef8b841200ab856b9301d205e7abed053d921765c",
+    "install.sh": "3df12a1cf3c07950ecc8b207deecba4a422e3b0c2eaf92178f20d751e7036ca8",
+    "eval_bc.sh": "f3f93ea130f9fde28d7bef823f159e3e177bf35bca9c5c5133bf9159af3bc12a",
+    "assisted_env.py": "9dda80e6e1c33e4262d7bfa17536e863116528909dfc4128aeb8144fa7298549",
+    "runtime_guard.py": "790c694393a54e735ed8bccc36508d59696d862dac7b337d72e4ac900f97e955",
+    "common.py": "55d0d5163b247e4d9952b678e535b9577b6446e9b144d9a5f89a30ed73f93c88",
+    "requirements.txt": "67ef386f42825c2d6fc8357921a017bb6c93d2664ecb12a56a08d06965d482d7"
+  },
+  "preservation": {
+    "existing_sac_files_checked": 33,
+    "all_unchanged": true,
+    "diff_only_bc_folder": true,
+    "audit_branch_is_not_ancestor": true,
+    "src_rel301m_changed_vs_main": false,
+    "bc_loss_changed": false,
+    "log_std_changed": false,
+    "dependencies_changed": false
+  },
+  "package_versions": {
+    "robosuite": "1.5.2",
+    "mujoco": "3.9.0",
+    "torch": "2.7.1+cu128",
+    "stable-baselines3": "2.7.1",
+    "gymnasium": "1.2.3",
+    "numpy": "1.26.4",
+    "h5py": "3.16.0",
+    "tqdm": "4.67.1"
+  },
+  "cuda_visible_in_smoke": true,
+  "collection": {
+    "schema_version": 2,
+    "status": "COLLECTION_COMPLETE",
+    "packages": {
+      "robosuite": "1.5.2",
+      "mujoco": "3.9.0",
+      "torch": "2.7.1+cu128",
+      "stable-baselines3": "2.7.1",
+      "gymnasium": "1.2.3",
+      "numpy": "1.26.4",
+      "h5py": "3.16.0",
+      "tqdm": "4.67.1"
+    },
+    "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+    "seed": 10000,
+    "assist_distance": 0.05,
+    "obs_dim": 60,
+    "action_dim": 7,
+    "environment": {
+      "env": "Lift",
+      "robot": "Panda",
+      "controller": "BASIC",
+      "arm_controller": "OSC_POSE",
+      "observation_keys": [
+        "object-state",
+        "robot0_proprio-state"
+      ],
+      "obs_dim": 60,
+      "action_dim": 7,
+      "action_layout": {
+        "Action Dimension": [
+          7
+        ],
+        "right": [
+          0,
+          6
+        ],
+        "right_gripper": [
+          6,
+          7
+        ]
+      },
+      "action_low": [
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "action_high": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "horizon": 500,
+      "control_freq": 20,
+      "reward_shaping": true,
+      "reward_scale": 1.0,
+      "use_camera_obs": false,
+      "use_object_obs": true,
+      "assist_distance": 0.05,
+      "evaluation_mode": "assisted",
+      "gripper_assistance": true,
+      "termination": "TimeLimit truncation, native success does not terminate"
+    },
+    "number_of_successful_episodes": 2,
+    "number_of_transitions": 68,
+    "requested_successful_episodes": 2,
+    "attempts": 11,
+    "max_attempts": 50,
+    "source_policy_success_rate": 0.18181818181818182,
+    "source_policy_success_rate_definition": "sustained native success",
+    "source_policy_ever_success_rate": 0.18181818181818182,
+    "success_hold_steps": 10,
+    "rejected_transient_success": 0,
+    "demonstrations": [
+      {
+        "episode_id": 0,
+        "seed": 10005,
+        "source_attempt": 5,
+        "initial_success": false,
+        "first_success_step": 27,
+        "sustained_success_start": 27,
+        "success_hold_steps": 10,
+        "saved_transition_count": 36,
+        "verified_rollout_length": 500,
+        "saved_final_observation_sha256": "a948367b816e886fcf648ed397b47131d78e22e19757fef3a842c6bc5a9c6033",
+        "source_final_success": true,
+        "saved_end_terminated": false,
+        "saved_end_truncated": false
+      },
+      {
+        "episode_id": 1,
+        "seed": 10010,
+        "source_attempt": 10,
+        "initial_success": false,
+        "first_success_step": 23,
+        "sustained_success_start": 23,
+        "success_hold_steps": 10,
+        "saved_transition_count": 32,
+        "verified_rollout_length": 500,
+        "saved_final_observation_sha256": "43196ce2a8c383ed9929523dff70437e9a5a2cd3e0a9ebc1af9c4b3065efa304",
+        "source_final_success": false,
+        "saved_end_terminated": false,
+        "saved_end_truncated": false
+      }
+    ],
+    "episode_seeds": [
+      10005,
+      10010
+    ],
+    "source_attempts": [
+      5,
+      10
+    ],
+    "source_model_path": "/home/minh/Documents/REL301m/REL301m-research/baselines/robosuite_official_sac_lift/runs/stage1_assisted_seed0_100k/best_model.zip",
+    "source_model_sha256": "4fb9cb3535856174ae48d51ef5a7be957986f05dd4c965885225311f8d6d8c75",
+    "source_config": {
+      "algorithm": "Stable-Baselines3 SAC",
+      "curriculum_stage": 1,
+      "assistance": {
+        "type": "open_gripper_until_close",
+        "assist_distance_m": 0.05,
+        "reward_modified": false,
+        "arm_actions_modified": false
+      },
+      "seed": 0,
+      "eval_seed": 10000,
+      "steps": 100000,
+      "device": "cuda",
+      "environment": {
+        "stage": "stage1_assisted_lift",
+        "env": "Lift",
+        "robot": "Panda",
+        "observation_shape": [
+          60
+        ],
+        "action_shape": [
+          7
+        ],
+        "action_low": [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0
+        ],
+        "action_high": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "horizon": 500,
+        "control_freq": 20,
+        "observation_keys": [
+          "object-state",
+          "robot0_proprio-state"
+        ],
+        "reward_shaping": true,
+        "assist_distance_m": 0.05,
+        "assist_rule": "force gripper OPEN only while distance_to_cube > assist_distance; arm actions unchanged",
+        "timeout_semantics": "Gymnasium TimeLimit truncation"
+      },
+      "sac": {
+        "policy": "MlpPolicy",
+        "net_arch": [
+          256,
+          256
+        ],
+        "learning_rate": 0.0003,
+        "buffer_size": 1000000,
+        "learning_starts": 1000,
+        "batch_size": 256,
+        "tau": 0.005,
+        "gamma": 0.99,
+        "train_freq": 1,
+        "gradient_steps": 1,
+        "ent_coef": "auto",
+        "target_entropy": "auto"
+      }
+    },
+    "collection_results": [
+      {
+        "seed": 10000,
+        "episode_return": 183.48855284084328,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "98ee02fa4d51bd8eceb510d57d184a9fc12b7af224501411d52a38a3ea260968",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 11,
+        "premature_close_count": 10,
+        "sustained_success": false
+      },
+      {
+        "seed": 10001,
+        "episode_return": 169.9434172870595,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "f6a5f010766170088ac8555229999f60967c2006692dc3658d9d9f68b9b3fe09",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 11,
+        "premature_close_count": 8,
+        "sustained_success": false
+      },
+      {
+        "seed": 10002,
+        "episode_return": 246.54760502539247,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": true,
+        "initial_success": false,
+        "initial_state_sha256": "2b73dca013ccfcac2e1f8a92e6a7e5e910353e21a83550da2d1d6857613fdb1b",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 15,
+        "premature_close_count": 9,
+        "sustained_success": false
+      },
+      {
+        "seed": 10003,
+        "episode_return": 166.06841894718974,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "2f3d0491b51087d0191ec94165b57369095265ea351c04bd1a16d69bcdbab474",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 16,
+        "premature_close_count": 11,
+        "sustained_success": false
+      },
+      {
+        "seed": 10004,
+        "episode_return": 39.59080996428376,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "576c9c9b7ec4b6e3807fb84e0e96408b311ad2eac1610950ec65419cdbbffe7b",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 488,
+        "premature_close_count": 24,
+        "sustained_success": false
+      },
+      {
+        "seed": 10005,
+        "episode_return": 405.95077124444066,
+        "ever_success": true,
+        "final_success": true,
+        "first_success_step": 27,
+        "episode_length": 500,
+        "ever_grasp": true,
+        "initial_success": false,
+        "initial_state_sha256": "8ecdf2ce21bc41a12064519bfff9cb65284346909c8233b807707436509d17ac",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 13,
+        "premature_close_count": 9,
+        "sustained_success": true
+      },
+      {
+        "seed": 10006,
+        "episode_return": 159.33204034761357,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "39c595e30185b9a1c2dc3c2fefea5b426915eeccc2d3a7369bbbfe4470afcac4",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 15,
+        "premature_close_count": 9,
+        "sustained_success": false
+      },
+      {
+        "seed": 10007,
+        "episode_return": 110.1864376565049,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "f6a81c3deee2b80305186f981c02ece4fbc110a7a97e4106b2f8f6fadd6da62c",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 403,
+        "premature_close_count": 179,
+        "sustained_success": false
+      },
+      {
+        "seed": 10008,
+        "episode_return": 51.33250194652036,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "567b44a974089de36397587003a1c51ee58a00a72f164ff97b61062deb3f122e",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 468,
+        "premature_close_count": 11,
+        "sustained_success": false
+      },
+      {
+        "seed": 10009,
+        "episode_return": 43.25697853087244,
+        "ever_success": false,
+        "final_success": false,
+        "first_success_step": null,
+        "episode_length": 500,
+        "ever_grasp": false,
+        "initial_success": false,
+        "initial_state_sha256": "6849eb41035a350f4c9ea96b474350141f35c25822b0fcba2cf1f5a33ad663ee",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 471,
+        "premature_close_count": 21,
+        "sustained_success": false
+      },
+      {
+        "seed": 10010,
+        "episode_return": 70.67968808019717,
+        "ever_success": true,
+        "final_success": false,
+        "first_success_step": 23,
+        "episode_length": 500,
+        "ever_grasp": true,
+        "initial_success": false,
+        "initial_state_sha256": "12a4b54e52e990e40e278e5e20c0e5e8aa9a045e4b0329116c03a848d15fee2c",
+        "evaluation_mode": "assisted",
+        "gripper_override_count": 467,
+        "premature_close_count": 459,
+        "sustained_success": true
+      }
+    ],
+    "labels": "actual actions captured immediately below assistance wrapper",
+    "environment_source_sha256": "9dda80e6e1c33e4262d7bfa17536e863116528909dfc4128aeb8144fa7298549"
+  },
+  "dataset": {
+    "path": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/data/clean_sustained_48b63afc.npz",
+    "sha256": "599a15de5006c1710b669f081ae5caeee932bea8a5afb9dfb1145b9036bddff9",
+    "inspection": "PASS",
+    "saved_episode_lengths": [
+      36,
+      32
+    ],
+    "saved_transitions": 68,
+    "demo_end_count": 2,
+    "env_done_count": 0,
+    "terminated_count": 0,
+    "truncated_count": 0,
+    "actions_equal_executed_actions": true,
+    "action_range": [
+      -1.0,
+      0.991702675819397
+    ],
+    "observation_dtype": "float32",
+    "action_dtype": "float32"
+  },
+  "training": {
+    "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+    "number_of_demonstrations": 2,
+    "number_of_transitions": 68,
+    "train_episode_ids": [
+      0
+    ],
+    "validation_episode_ids": [
+      1
+    ],
+    "train_transitions": 36,
+    "validation_transitions": 32,
+    "hyperparameters": {
+      "epochs": 2,
+      "batch_size": 256,
+      "learning_rate": 0.0003,
+      "net_arch": [
+        256,
+        256
+      ],
+      "seed": 0,
+      "patience": 20,
+      "optimizer": "Adam"
+    },
+    "completed_epochs": 2,
+    "best_epoch": 2,
+    "best_validation_loss": 0.3283627373831613,
+    "critic_unchanged": true,
+    "deterministic_save_reload_preserved": true,
+    "deterministic_save_reload_max_abs_error": 0.0,
+    "best_checkpoint_sha256": "78c3c3ccea8125470b53950c32057d1794660b47efa3f00e1137e35b015e58e9"
+  },
+  "evaluation": {
+    "evaluations": {
+      "assisted": {
+        "episodes": 2,
+        "seeds": [
+          20000,
+          20001
+        ],
+        "mean_return": 1.057863444775764,
+        "std_return": 0.019299153851591866,
+        "ever_success_rate": 0.0,
+        "final_success_rate": 0.0,
+        "mean_first_success_step": null,
+        "first_success_mean_denominator": "successful episodes only; null when none",
+        "mean_episode_length": 500.0,
+        "grasp_rate": 0.0,
+        "premature_close_rate": 0.661,
+        "premature_close_definition": "raw policy gripper>0 while pre-step distance exceeds 5cm diagnostic threshold; not a native failure criterion",
+        "episode_results": [
+          {
+            "seed": 20000,
+            "episode_return": 1.0771625986273559,
+            "ever_success": false,
+            "final_success": false,
+            "first_success_step": null,
+            "episode_length": 500,
+            "ever_grasp": false,
+            "initial_success": false,
+            "initial_state_sha256": "bc6ee27fd98a9f06586c7bd2e32b5919d16ae94aa1aaf606512a4cc93aa796aa",
+            "evaluation_mode": "assisted",
+            "gripper_override_count": 500,
+            "premature_close_count": 342
+          },
+          {
+            "seed": 20001,
+            "episode_return": 1.0385642909241721,
+            "ever_success": false,
+            "final_success": false,
+            "first_success_step": null,
+            "episode_length": 500,
+            "ever_grasp": false,
+            "initial_success": false,
+            "initial_state_sha256": "a726eda47bd4009a1492a386aa6ce21462193cc72d99f609c867b34ac1298ba0",
+            "evaluation_mode": "assisted",
+            "gripper_override_count": 500,
+            "premature_close_count": 319
+          }
+        ],
+        "evaluation_mode": "assisted",
+        "gripper_assistance": true,
+        "assist_distance": 0.05,
+        "gripper_override_count": 1000
+      },
+      "unassisted": {
+        "episodes": 2,
+        "seeds": [
+          20000,
+          20001
+        ],
+        "mean_return": 1.0442020269770924,
+        "std_return": 0.017284239007648305,
+        "ever_success_rate": 0.0,
+        "final_success_rate": 0.0,
+        "mean_first_success_step": null,
+        "first_success_mean_denominator": "successful episodes only; null when none",
+        "mean_episode_length": 500.0,
+        "grasp_rate": 0.0,
+        "premature_close_rate": 0.634,
+        "premature_close_definition": "raw policy gripper>0 while pre-step distance exceeds 5cm diagnostic threshold; not a native failure criterion",
+        "episode_results": [
+          {
+            "seed": 20000,
+            "episode_return": 1.0614862659847408,
+            "ever_success": false,
+            "final_success": false,
+            "first_success_step": null,
+            "episode_length": 500,
+            "ever_grasp": false,
+            "initial_success": false,
+            "initial_state_sha256": "bc6ee27fd98a9f06586c7bd2e32b5919d16ae94aa1aaf606512a4cc93aa796aa",
+            "evaluation_mode": "unassisted",
+            "gripper_override_count": 0,
+            "premature_close_count": 315
+          },
+          {
+            "seed": 20001,
+            "episode_return": 1.0269177879694442,
+            "ever_success": false,
+            "final_success": false,
+            "first_success_step": null,
+            "episode_length": 500,
+            "ever_grasp": false,
+            "initial_success": false,
+            "initial_state_sha256": "a726eda47bd4009a1492a386aa6ce21462193cc72d99f609c867b34ac1298ba0",
+            "evaluation_mode": "unassisted",
+            "gripper_override_count": 0,
+            "premature_close_count": 319
+          }
+        ],
+        "evaluation_mode": "unassisted",
+        "gripper_assistance": false,
+        "assist_distance": null,
+        "gripper_override_count": 0
+      }
+    },
+    "requested_mode": "both",
+    "checkpoint_path": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/bc/checkpoints/best_bc.zip",
+    "checkpoint_sha256": "78c3c3ccea8125470b53950c32057d1794660b47efa3f00e1137e35b015e58e9",
+    "package_versions": {
+      "robosuite": "1.5.2",
+      "mujoco": "3.9.0",
+      "torch": "2.7.1+cu128",
+      "stable-baselines3": "2.7.1",
+      "gymnasium": "1.2.3",
+      "numpy": "1.26.4",
+      "h5py": "3.16.0",
+      "tqdm": "4.67.1"
+    },
+    "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+    "deterministic": true,
+    "demonstrations_used": false
+  },
+  "regression": {
+    "passed": 29,
+    "seconds": 3.25,
+    "failures": 0,
+    "errors": 0
+  },
+  "commands_tested": [
+    {
+      "name": "install",
+      "command": [
+        "./install.sh"
+      ],
+      "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+      "exit_code": 0,
+      "seconds": 1.7144246679963544,
+      "log": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/install.txt"
+    },
+    {
+      "name": "smoke",
+      "command": [
+        "./smoke.sh"
+      ],
+      "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+      "exit_code": 0,
+      "seconds": 2.434961564002151,
+      "log": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/smoke.txt"
+    },
+    {
+      "name": "regression",
+      "command": [
+        "/home/minh/Documents/REL301m/REL301m-research/.venv-phase3/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "-q",
+        "test_contract.py",
+        "--junitxml",
+        "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/regression.xml"
+      ],
+      "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+      "exit_code": 0,
+      "seconds": 3.890410139996675,
+      "log": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/regression.txt"
+    },
+    {
+      "name": "collection",
+      "command": [
+        "./collect.sh",
+        "--model",
+        "../robosuite_official_sac_lift/runs/stage1_assisted_seed0_100k/best_model.zip",
+        "--successful-episodes",
+        "2",
+        "--success-hold-steps",
+        "10",
+        "--max-attempts",
+        "50",
+        "--seed",
+        "10000",
+        "--device",
+        "cpu",
+        "--output",
+        "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/data/clean_sustained_48b63afc.npz"
+      ],
+      "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+      "exit_code": 0,
+      "seconds": 25.550148232003266,
+      "log": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/collection.txt"
+    },
+    {
+      "name": "inspect",
+      "command": [
+        "/home/minh/Documents/REL301m/REL301m-research/.venv-phase3/bin/python",
+        "inspect_dataset.py",
+        "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/data/clean_sustained_48b63afc.npz"
+      ],
+      "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+      "exit_code": 0,
+      "seconds": 0.7963212600006955,
+      "log": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/inspect.txt"
+    },
+    {
+      "name": "train",
+      "command": [
+        "./train_bc.sh",
+        "--dataset",
+        "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/data/clean_sustained_48b63afc.npz",
+        "--epochs",
+        "2",
+        "--batch-size",
+        "256",
+        "--seed",
+        "0",
+        "--device",
+        "cpu",
+        "--run-dir",
+        "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/bc"
+      ],
+      "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+      "exit_code": 0,
+      "seconds": 2.401999245004845,
+      "log": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/train.txt"
+    },
+    {
+      "name": "dual_evaluation",
+      "command": [
+        "./eval_bc.sh",
+        "--model",
+        "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/bc/checkpoints/best_bc.zip",
+        "--episodes",
+        "2",
+        "--seed",
+        "20000",
+        "--mode",
+        "both",
+        "--device",
+        "cpu"
+      ],
+      "git_commit": "48b63afc97502c50e19a38441c877ffd9e4d1b4a",
+      "exit_code": 0,
+      "seconds": 10.161524995004584,
+      "log": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc/logs/dual_evaluation.txt"
+    }
+  ],
+  "run_dir": "/home/minh/Documents/REL301m/REL301m-research/baselines/bc_lift_bootstrap/runs/clean_acceptance_48b63afc",
+  "logs_sha256": {
+    "collection.txt": "b2531e02716cbd9fdc0114733b488ed1ae1dac3f70302163d705a49dfd7c800c",
+    "regression.txt": "c138e2f1518b846a2da6b2754ab16b0b30a4e81a100778803f9f66cb9d502889",
+    "regression.xml": "eb32470b30fee83322861485c1155326a0692629cad81723ff8b97b6af1a9521",
+    "dual_evaluation.txt": "d47c6f0b6c2004a039edeb962bd3529df3e037a9b2779546b739720851d25ad6",
+    "train.txt": "93f91c1894155165d787f92d7c6ba75bc4d95713c1d0ab14f049c9e9769e3602",
+    "smoke.txt": "055be3f2fbd74dc2946a20a5c4d4bf7f7524acc6884fbaca6f190fe51a4a91e3",
+    "inspect.txt": "5e16290b69b8eea72b8efda87d7bdff1765ed7b41ef50628889bff1bd1b24e05",
+    "install.txt": "5e65fff0a5110d88cd01fa030fd820c66b1355bbe0e74abf0b525dc245ac139e"
+  },
+  "sac_finetuning_executed": false,
+  "large_bc_experiment_executed": false,
+  "performance_improvement_established": false,
+  "stochastic_limitation": "Deterministic BC does not calibrate SAC exploration. No stochastic teacher equivalence or safe BC-to-SAC fine-tuning claim."
 }
