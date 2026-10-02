@@ -33,6 +33,8 @@ def validate_audit(config):
         return
     if not isinstance(audit, dict) or not config.get('bc_checkpoint'):
         raise ValueError('Baseline audit requires a mapping and a BC checkpoint')
+    if config['total_steps'] > 5000:
+        raise ValueError('Baseline audit is capped at 5k; long-pilot gates remain unresolved')
     required = {'dataset', 'interval_updates', 'subset_size', 'subset_seed', 'early_eval_steps',
                 'early_eval_episodes', 'stochastic_eval_episodes'}
     if set(audit) != required:

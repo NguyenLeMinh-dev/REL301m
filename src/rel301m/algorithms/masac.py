@@ -102,7 +102,9 @@ class MASAC(nn.Module):
             for parameter, target_parameter in zip(source.parameters(), target.parameters()):
                 target_parameter.lerp_(parameter, self.config['tau'])
 
-    def update(self, batch, *, collect_diagnostics=True, demo_batch=None, update_actor=True):
+    def update(self, batch, *, collect_diagnostics=True, demo_batch=None, update_actor=None):
+        if update_actor is None:
+            update_actor = self.critic_optimizer_updates >= self.config.get('critic_only_updates', 0)
         self.configure_log_std()
         require_finite('replay batch', *batch.values())
         coefficient = self.config.get('fine_tune', {}).get('lambda_bc', 0.0)

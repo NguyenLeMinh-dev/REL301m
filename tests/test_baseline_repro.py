@@ -133,3 +133,66 @@ def test_fixed_drift_subsets_are_rng_neutral_and_frozen_parameters_checked(tmp_p
     assert rows[0]['actor_sha256']==rows[1]['actor_sha256']
     with pytest.raises(RuntimeError,match='freeze'):
         audit.assert_frozen(model,2)
+
+
+def test_critic_only_schedule_preserves_actor_alpha_sha_and_updates_targets():
+    model=learner()
+    model.config['critic_only_updates']=2
+    initial=actor_sha(model)
+    alpha=model.log_alpha.detach().clone()
+    target=deepcopy(model.target_q1.state_dict())
+    data=batch()
+    model.update(data)
+    model.update(data)
+    assert actor_sha(model)==initial and torch.equal(alpha,model.log_alpha.detach())
+    assert model.actor_optimizer_updates==[0,0] and model.alpha_optimizer_updates==0
+    assert any(not torch.equal(v,model.target_q1.state_dict()[k]) for k,v in target.items())
+    model.update(data)
+    assert model.actor_optimizer_updates==[1,1] and model.alpha_optimizer_updates==1
+    assert actor_sha(model)!=initial
+
+
+def test_optional_warm_start_std_override_preserves_mean_and_is_disabled_by_default(tmp_path):
+    source=learner(17)
+    path=tmp_path/'bc.pt'
+    source.save(path,dict(training_stage='behavior_cloning',actor_input_transform='folded_into_first_linear',
+       demonstration_manifest_sha256='d'*64,seed=17,best_epoch=2))
+    target=learner()
+    info=warm_start_from_bc(target,path)
+    assert info['log_std_override'] is None
+    before=deepcopy(target.state_dict())
+    obs=[np.arange(66,dtype=np.float32)/66,np.ones(66,dtype=np.float32)]
+    means=target.act(obs,True)
+    state=torch.get_rng_state().clone()
+    info=warm_start_from_bc(target,path,initial_log_std=-3)
+    assert torch.equal(state,torch.get_rng_state())
+    assert info['log_std_override']==-3
+    for original,current in zip(means,target.act(obs,True)):
+        np.testing.assert_array_equal(original,current)
+    for i,actor in enumerate(target.actors):
+        assert torch.equal(actor(torch.tensor(obs[i]))[1],torch.full((7,),-3.))
+    for k,v in target.state_dict().items():
+        if not k.startswith('actors.'):
+            torch.testing.assert_close(before[k],v,atol=0,rtol=0)
+    assert target.optimizer_counts()['critic_optimizer_updates']==0
+    with pytest.raises(ValueError):
+        warm_start_from_bc(target,path,initial_log_std=float('nan'))
+
+
+def test_treatments_are_single_factor_against_explicit_short_control():
+    base=load_config(PROJECT_ROOT/'configs/experiment/stabilize_control.yaml')
+    nominal=load_config(PROJECT_ROOT/'configs/experiment/bc_pilot.yaml')
+    assert 'fine_tune' not in base['algo']
+    assert base['algo']['warmup_steps']==0 and nominal['algo']['warmup_steps']==10000
+    a=load_config(PROJECT_ROOT/'configs/experiment/stabilize_a_critic_only.yaml')
+    b=load_config(PROJECT_ROOT/'configs/experiment/stabilize_b_initial_std.yaml')
+    c=load_config(PROJECT_ROOT/'configs/experiment/stabilize_c_actor_lr.yaml')
+    assert {k for k in a['algo'] if a['algo'][k]!=base['algo'].get(k)}=={'name','critic_only_updates'}
+    assert a['algo']['critic_only_updates']==1000
+    assert b['algo']==base['algo'] and b['bc_init_log_std']==-3
+    assert {k for k in c['algo'] if c['algo'][k]!=base['algo'].get(k)}=={'name','actor_lr'}
+    assert c['algo']['actor_lr']==3e-5 and c['algo']['critic_lr']==3e-4
+    for cfg in [a,b,c]:
+        assert cfg['audit']==base['audit']
+        assert cfg['env_config']==base['env_config']
+        assert cfg['bc_checkpoint']==base['bc_checkpoint']

@@ -8,7 +8,11 @@ import torch
 from .demonstrations import file_sha256
 
 
-def warm_start_from_bc(model, checkpoint, *, expected_env_config=None):
+def warm_start_from_bc(model, checkpoint, *, expected_env_config=None, initial_log_std=None):
+    if initial_log_std is not None and (isinstance(initial_log_std, bool) or
+            not isinstance(initial_log_std, (int, float)) or not np.isfinite(initial_log_std) or
+            not -20 <= initial_log_std <= 2):
+        raise ValueError('initial_log_std must be finite within [-20, 2]')
     checkpoint = Path(checkpoint)
     payload = torch.load(checkpoint, map_location='cpu', weights_only=True)
     metadata = payload.get('metadata', {})
@@ -40,7 +44,9 @@ def warm_start_from_bc(model, checkpoint, *, expected_env_config=None):
         states.append(state)
     for actor, state in zip(model.actors, states):
         actor.load_state_dict(state)
-    return dict(method='behavior_cloning', checkpoint=str(checkpoint.resolve()),
+    if initial_log_std is not None:
+        model.initialize_log_std(initial_log_std)
+    return dict(log_std_override=initial_log_std, method='behavior_cloning', checkpoint=str(checkpoint.resolve()),
                 checkpoint_sha256=file_sha256(checkpoint),
                 demonstration_manifest_sha256=metadata['demonstration_manifest_sha256'],
                 bc_seed=metadata['seed'], bc_best_epoch=metadata['best_epoch'],

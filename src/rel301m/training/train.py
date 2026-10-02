@@ -70,6 +70,8 @@ def load_config(path):
             raise ValueError(f'{key} must be a positive integer')
     if not isinstance(algo['warmup_steps'], int) or algo['warmup_steps'] < 0:
         raise ValueError('warmup_steps must be a nonnegative integer')
+    if type(algo.get('critic_only_updates', 0)) is not int or algo.get('critic_only_updates', 0) < 0:
+        raise ValueError('critic_only_updates must be a nonnegative integer')
     if algo['buffer_capacity'] < algo['batch_size']:
         raise ValueError('buffer_capacity must be at least batch_size')
     if not 0 <= algo['gamma'] <= 1 or not 0 < algo['tau'] <= 1:
@@ -80,6 +82,10 @@ def load_config(path):
         raise ValueError('Baseline derives target entropy from live action dimensions')
     if config.get('predictor', {}).get('enabled', False):
         raise ValueError('Phase 3 baseline does not enable a predictor')
+    std = config.get('bc_init_log_std')
+    if std is not None and (not config.get('bc_checkpoint') or isinstance(std, bool) or
+            not isinstance(std, (int, float)) or not np.isfinite(std) or not -20 <= std <= 2):
+        raise ValueError('Invalid BC initial log_std override')
     if config['device'] not in ('auto', 'cpu', 'cuda'):
         raise ValueError('device must be auto, cpu, or cuda')
     from rel301m.imitation.demo_finetune import validate_fine_tune
@@ -223,6 +229,11 @@ def train(config, run_dir=None):
                 demos.prefill(replay)
             extra_metadata.update(training_variant='bc_demo_finetune_masac', demonstration_replay=demos.metadata,
                                   collision_fix_verified=False)
+        if config.get('bc_init_log_std') is not None:
+            # Keep raw loaded-BC probes above; only this optional treatment changes the std head.
+            actor_init = warm_start_from_bc(model, resolve_path(config['bc_checkpoint']),
+                expected_env_config=env_config, initial_log_std=config['bc_init_log_std'])
+            extra_metadata['actor_initialization'] = actor_init
         if audit_config:
             if demos is None:
                 demos = DemonstrationReplay(resolve_path(audit_config['dataset']), resolve_path(config['bc_checkpoint']),
@@ -262,7 +273,7 @@ def train(config, run_dir=None):
         (run_dir / 'random_baseline.json').write_text(json.dumps(baseline, indent=2)+'\n', encoding='utf-8')
         evaluation_seconds += time.perf_counter() - tick
         progress.write(f'Random baseline: {json.dumps(baseline)}')
-        if settings:
+        if settings or config.get('bc_init_log_std') is not None:
             initial_eval_start = time.perf_counter()
             progress.set_phase('initial BC evaluation', episodes=config['eval_episodes'])
             initial_rows, initial_summary = evaluate_policy(eval_env, model, config['eval_episodes'], config['eval_seed'],
@@ -285,8 +296,14 @@ def train(config, run_dir=None):
             if initial_summary['initialization_sequence_sha256'] != stochastic_summary['initialization_sequence_sha256']:
                 raise RuntimeError('Initial deterministic/stochastic evaluation states differ')
             evaluation_seconds += time.perf_counter() - initial_eval_start
-            writers['validation'].writerow(dict(step=0, updates=model.updates, actor_updates=0,
-                                               **demos.validation_metrics(model)))
+            if settings:
+                writers['validation'].writerow(dict(step=0, updates=model.updates, actor_updates=0,
+                                                   **demos.validation_metrics(model)))
+        elif reference_actors is not None:
+            initial_score = (loaded_summary['success_rate'], loaded_summary['mean_return'])
+            model.save(run_dir / 'initial_bc.pt', dict(metadata, step=0, evaluation=loaded_summary))
+            model.save(run_dir / 'best.pt', dict(metadata, step=0, evaluation=loaded_summary, selection_episodes=config['eval_episodes']))
+        if settings:
             original_lrs = [group['lr'] for group in model.q_optimizer.param_groups]
             progress.set_phase('critic pretrain')
             pretrain_start = time.perf_counter()
@@ -313,7 +330,7 @@ def train(config, run_dir=None):
         initial = env.check_success()
         ever_success, final_success, first_success = initial, initial, 0 if initial else None
         recent_success = deque(maxlen=100)
-        best_score = initial_score if settings else (-1.0, -float('inf'))
+        best_score = initial_score if reference_actors is not None else (-1.0, -float('inf'))
         for step in range(1, config['total_steps'] + 1):
             if step == config['algo']['warmup_steps'] + 1:
                 progress.set_phase('training')
@@ -369,6 +386,7 @@ def train(config, run_dir=None):
                             update_actor=model.updates - pretrain_updates >= settings['actor_freeze_updates'])
                     else:
                         batch = replay.sample(config['algo']['batch_size'], device)
+                        update_kwargs['update_actor'] = model.critic_optimizer_updates >= config['algo'].get('critic_only_updates', 0)
                     if auditor:
                         auditor.before_update(model, step, update_kwargs.get('update_actor', True))
                     last_metrics = model.update(batch, **update_kwargs)
