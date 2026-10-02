@@ -1,0 +1,68 @@
+{
+  "checkpoints": {
+    "1000": {
+      "bitwise_equal_all_model_tensors": true,
+      "mismatches": []
+    },
+    "2000": {
+      "bitwise_equal_all_model_tensors": true,
+      "mismatches": []
+    },
+    "3000": {
+      "bitwise_equal_all_model_tensors": true,
+      "mismatches": []
+    }
+  },
+  "selected_drift": [
+    {
+      "environment_steps": "1000",
+      "critic_optimizer_updates": "2000",
+      "actor_optimizer_updates_0": "0",
+      "alpha_optimizer_updates": "0",
+      "validation_bc_drift_mse_0": "0.0",
+      "validation_bc_drift_mse_1": "0.0",
+      "validation_expert_mse_0": "0.0009363924618810415",
+      "validation_expert_mse_1": "0.000372840731870383"
+    },
+    {
+      "environment_steps": "1100",
+      "critic_optimizer_updates": "2100",
+      "actor_optimizer_updates_0": "100",
+      "alpha_optimizer_updates": "100",
+      "validation_bc_drift_mse_0": "0.10990963876247406",
+      "validation_bc_drift_mse_1": "0.21577498316764832",
+      "validation_expert_mse_0": "0.11088114976882935",
+      "validation_expert_mse_1": "0.21562273800373077"
+    },
+    {
+      "environment_steps": "1200",
+      "critic_optimizer_updates": "2200",
+      "actor_optimizer_updates_0": "200",
+      "alpha_optimizer_updates": "200",
+      "validation_bc_drift_mse_0": "0.10595085471868515",
+      "validation_bc_drift_mse_1": "0.23743410408496857",
+      "validation_expert_mse_0": "0.10708273202180862",
+      "validation_expert_mse_1": "0.23760804533958435"
+    },
+    {
+      "environment_steps": "2000",
+      "critic_optimizer_updates": "3000",
+      "actor_optimizer_updates_0": "1000",
+      "alpha_optimizer_updates": "1000",
+      "validation_bc_drift_mse_0": "0.07709386199712753",
+      "validation_bc_drift_mse_1": "0.05543822422623634",
+      "validation_expert_mse_0": "0.07741665840148926",
+      "validation_expert_mse_1": "0.05606456473469734"
+    },
+    {
+      "environment_steps": "3000",
+      "critic_optimizer_updates": "4000",
+      "actor_optimizer_updates_0": "2000",
+      "alpha_optimizer_updates": "2000",
+      "validation_bc_drift_mse_0": "0.10506720095872879",
+      "validation_bc_drift_mse_1": "0.12544453144073486",
+      "validation_expert_mse_0": "0.10557692497968674",
+      "validation_expert_mse_1": "0.12591221928596497"
+    }
+  ]
+}

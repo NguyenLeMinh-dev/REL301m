@@ -11,6 +11,7 @@ def save_checkpoint(model, path, metadata=None):
     payload = dict(format_version=1, obs_dims=model.obs_dims, state_dim=model.state_dim,
                    action_specs=[(low.tolist(), high.tolist()) for low, high in model.action_specs],
                    config=model.config, model=model.state_dict(), updates=model.updates,
+                   optimizer_update_counts=model.optimizer_counts(),
                    global_step=(metadata or {}).get('step'),
                    actor_optimizers=[opt.state_dict() for opt in model.actor_optimizers],
                    q_optimizer=model.q_optimizer.state_dict(), alpha_optimizer=model.alpha_optimizer.state_dict(),
@@ -29,6 +30,19 @@ def load_checkpoint(path, device='cpu', load_optimizers=True):
     model = MASAC(payload['obs_dims'], payload['state_dim'], payload['action_specs'], payload['config'], device)
     model.load_state_dict(payload['model'])
     model.updates = payload['updates']
+    counts = payload.get('optimizer_update_counts')
+    if counts is None:
+        # Legacy checkpoints store real Adam steps even when updates includes critic-only warmup.
+        def steps(optimizer):
+            return max((int(state['step']) for state in optimizer['state'].values()), default=0)
+        counts = dict(critic_optimizer_updates=steps(payload['q_optimizer']),
+                      actor_optimizer_updates_0=steps(payload['actor_optimizers'][0]),
+                      actor_optimizer_updates_1=steps(payload['actor_optimizers'][1]),
+                      alpha_optimizer_updates=steps(payload['alpha_optimizer']))
+    model.critic_optimizer_updates = counts['critic_optimizer_updates']
+    model.actor_optimizer_updates = [counts[f'actor_optimizer_updates_{i}'] for i in range(2)]
+    model.alpha_optimizer_updates = counts['alpha_optimizer_updates']
+    model.configure_log_std()
     if load_optimizers:
         for optimizer, state in zip(model.actor_optimizers, payload['actor_optimizers']):
             optimizer.load_state_dict(state)

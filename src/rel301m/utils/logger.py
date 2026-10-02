@@ -62,6 +62,8 @@ def run_metadata(run_dir, config, env_config, model, replay, device, *, extra_me
                     gpu=gpu.stdout.strip() if gpu.returncode == 0 else None,
                     observation_dims=list(model.obs_dims), critic_state_dim=model.state_dim,
                     action_dims=list(model.action_dims), target_entropy=model.target_entropy.cpu().tolist(),
+                    optimizer_update_counts_initial=model.optimizer_counts(),
+                    actor_update_order='sequential',
                     parameter_counts=model.parameter_counts(), replay_allocated_bytes=replay.allocated_bytes,
                     source_sha256=hashes, predictor_enabled=False,
                     communication_cost='N/A',

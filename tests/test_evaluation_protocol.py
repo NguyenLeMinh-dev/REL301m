@@ -73,3 +73,20 @@ def test_same_eval_sequence_across_training_seeds():
         finally:
             wrapper.close()
     assert sequences[0] == sequences[1]
+
+
+def test_stochastic_diagnostic_can_preserve_training_rng_and_initializations(env):
+    class ProbePolicy:
+        def act(self, observations, deterministic=False):
+            assert deterministic is False
+            return tuple((torch.randn(7) * .01).numpy() for _ in range(2))
+
+    wrapper = MultiAgentWrapper(env)
+    initial_state = deepcopy(env.rng.bit_generator.state)
+    torch_rng = torch.get_rng_state().clone()
+    deterministic_rows, _ = evaluate_policy(wrapper, ZeroPolicy(), 1, 20000, initial_rng_state=initial_state)
+    with torch.random.fork_rng(devices=[]):
+        rows, _ = evaluate_policy(wrapper, ProbePolicy(), 1, 20000,
+                                  initial_rng_state=initial_state, deterministic=False)
+    assert rows[0]['initial_state_sha256'] == deterministic_rows[0]['initial_state_sha256']
+    assert torch.equal(torch_rng, torch.get_rng_state())

@@ -1,0 +1,21 @@
+{
+  "mujoco": "3.9.0",
+  "original_error": "FatalError('mj_narrowphase: collision function returned 10 contacts for geom pair (150, 153), expected at most 8 from mj_maxContact')",
+  "exact_resume": false,
+  "snapshot": "experiments/phase3/bc_pilot_20261002T094730Z/seed0/failure_state.npz",
+  "collision_fix_verified": false,
+  "status": "reproduced",
+  "error": "mj_narrowphase: collision function returned 10 contacts for geom pair (150, 153), expected at most 8 from mj_maxContact",
+  "geoms": [
+    {
+      "id": 150,
+      "name": "gripper1_right_finger1_pad_collision",
+      "type": 6
+    },
+    {
+      "id": 153,
+      "name": "gripper1_right_finger2_pad_collision",
+      "type": 6
+    }
+  ]
+}

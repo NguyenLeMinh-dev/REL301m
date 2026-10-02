@@ -1,0 +1,10 @@
+{
+  "episodes": 10,
+  "mean_return": 4.320494893384904,
+  "success_rate": 0.0,
+  "final_success_rate": 0.0,
+  "mean_first_success_step": null,
+  "mean_first_success_time_s": null,
+  "mean_episode_length": 200.0,
+  "initialization_sequence_sha256": "19841a3401962f77201c881bd1c5865b19aa9a104e7c42c02926d6ccedfd7721"
+}

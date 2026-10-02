@@ -21,6 +21,8 @@ import numpy as np
 import torch
 import yaml
 
+from rel301m.training.baseline_audit import (BaselineAudit, BCReferencePolicy, COUNTER_FIELDS,
+    DRIFT_FIELDS, AUDIT_METRICS, validate_audit)
 from rel301m.algorithms.masac import MASAC
 from rel301m.algorithms.replay_buffer import ReplayBuffer
 from rel301m.envs.multi_agent_wrapper import MultiAgentWrapper
@@ -40,6 +42,7 @@ LOSS_FIELDS = ['step', 'updates', 'q_loss', 'q1_mean', 'q2_mean', 'target_mean',
                'action_saturation_0', 'action_saturation_1']
 EPISODE_FIELDS = ['step', 'episode', 'episode_return', 'ever_success', 'first_success_step', 'final_success',
                   'episode_length', 'first_success_time_s', 'success_rate_100', 'partial']
+LOSS_FIELDS += COUNTER_FIELDS + ['environment_steps']
 EVAL_FIELDS = ['step', 'episodes', 'mean_return', 'success_rate', 'final_success_rate', 'mean_first_success_step', 'mean_first_success_time_s', 'mean_episode_length', 'initialization_sequence_sha256']
 
 
@@ -67,6 +70,8 @@ def load_config(path):
             raise ValueError(f'{key} must be a positive integer')
     if not isinstance(algo['warmup_steps'], int) or algo['warmup_steps'] < 0:
         raise ValueError('warmup_steps must be a nonnegative integer')
+    if type(algo.get('critic_only_updates', 0)) is not int or algo.get('critic_only_updates', 0) < 0:
+        raise ValueError('critic_only_updates must be a nonnegative integer')
     if algo['buffer_capacity'] < algo['batch_size']:
         raise ValueError('buffer_capacity must be at least batch_size')
     if not 0 <= algo['gamma'] <= 1 or not 0 < algo['tau'] <= 1:
@@ -77,8 +82,15 @@ def load_config(path):
         raise ValueError('Baseline derives target entropy from live action dimensions')
     if config.get('predictor', {}).get('enabled', False):
         raise ValueError('Phase 3 baseline does not enable a predictor')
+    std = config.get('bc_init_log_std')
+    if std is not None and (not config.get('bc_checkpoint') or isinstance(std, bool) or
+            not isinstance(std, (int, float)) or not np.isfinite(std) or not -20 <= std <= 2):
+        raise ValueError('Invalid BC initial log_std override')
     if config['device'] not in ('auto', 'cpu', 'cuda'):
         raise ValueError('device must be auto, cpu, or cuda')
+    from rel301m.imitation.demo_finetune import validate_fine_tune
+    validate_fine_tune(config)
+    validate_audit(config)
     return config
 
 
@@ -89,6 +101,12 @@ def select_device(request):
 
 
 def train(config, run_dir=None):
+    from rel301m.imitation.demo_finetune import DemonstrationReplay, validate_fine_tune, demo_ratio
+    validate_fine_tune(config)
+    validate_audit(config)
+    audit_config = config.get("audit")
+    auditor = None
+    settings = config['algo'].get('fine_tune')
     seed = config['seed']
     seed_everything(seed)
     torch.set_num_threads(config['torch_threads'])
@@ -119,12 +137,15 @@ def train(config, run_dir=None):
     done_count = ever_count = final_count = 0
     baseline = None
     final_evaluation = None
+    demos = None
+    actor_updates = 0
+    pretrain_updates = 0
     progress = TrainingProgress(config['total_steps'], seed, enabled=config.get('progress', True))
 
     def write_diagnostics(status):
         model_ready = last_metrics is not None
         diagnostics = dict(status=status, global_step=completed_steps, attempted_step=step,
-                           updates=model.updates, numeric=dict(numeric),
+                           updates=model.updates, optimizer_update_counts=model.optimizer_counts(), numeric=dict(numeric),
                            loss_check_status='PASS' if model_ready else 'NOT_EXERCISED',
                            gradient_norm_min=gradient_min, gradient_norm_max=gradient_max,
                            alpha_final=model.alpha.detach().cpu().tolist(),
@@ -142,6 +163,9 @@ def train(config, run_dir=None):
                            environment=dict(training_ever_success_count=ever_count,
                                             training_final_success_count=final_count, timeouts=done_count),
                            evaluation=final_evaluation)
+        if settings:
+            diagnostics['fine_tune'] = dict(critic_pretrain_updates=pretrain_updates, actor_updates=actor_updates,
+                validation=demos.validation_metrics(model) if demos else None, collision_fix_verified=False)
         diagnostics['last_diagnostic_step'] = diagnostic_step
         for i in range(2):
             metrics = diagnostic_metrics or {}
@@ -163,17 +187,82 @@ def train(config, run_dir=None):
         obs_dims = [env.observation_dims[agent]['actor_obs'] for agent in env.agent_ids]
         bounds = [env.action_specs[agent] for agent in env.agent_ids]
         model = MASAC(obs_dims, env.critic_state_dim, bounds, config['algo'], device)
+        reference_actors = None
         extra_metadata = dict(training_variant='scratch_masac', actor_initialization=dict(method='random'))
         if config.get('bc_checkpoint'):
             from rel301m.imitation.warm_start import warm_start_from_bc
             actor_init = warm_start_from_bc(model, resolve_path(config['bc_checkpoint']), expected_env_config=env_config)
+            reference_actors = deepcopy(model.actors)
             extra_metadata = dict(training_variant='bc_initialized_masac', actor_initialization=actor_init,
                                   initialization='BC actors; torch.nn.Linear default critics',
                                   critic_initialization='torch.nn.Linear default reset_parameters')
+        if reference_actors is not None:
+            # Evaluate the loaded BC distribution before the configured std override or any optimizer step.
+            reference_policy = BCReferencePolicy(reference_actors)
+            tick = time.perf_counter()
+            progress.set_phase('loaded BC deterministic', episodes=config['eval_episodes'])
+            loaded_rows, loaded_summary = evaluate_policy(eval_env, reference_policy, config['eval_episodes'],
+                config['eval_seed'], initial_rng_state=eval_rng_state, episode_callback=progress.episode_completed)
+            progress.set_phase('loaded BC stochastic', episodes=config['eval_episodes'])
+            devices = list(range(torch.cuda.device_count())) if device == 'cuda' else []
+            with torch.random.fork_rng(devices=devices):
+                noisy_rows, noisy_summary = evaluate_policy(eval_env, reference_policy, config['eval_episodes'],
+                    config['eval_seed'], initial_rng_state=eval_rng_state,
+                    episode_callback=progress.episode_completed, deterministic=False)
+            if loaded_summary['initialization_sequence_sha256'] != noisy_summary['initialization_sequence_sha256']:
+                raise RuntimeError('Loaded BC deterministic/stochastic initial states differ')
+            for mode, rows, summary in [('deterministic', loaded_rows, loaded_summary), ('stochastic', noisy_rows, noisy_summary)]:
+                write_episodes(run_dir / f'loaded_bc_{mode}_episodes.csv', rows)
+                (run_dir / f'loaded_bc_{mode}_evaluation.json').write_text(json.dumps(summary, indent=2)+'\n')
+            evaluation_seconds += time.perf_counter() - tick
+            extra_metadata['loaded_bc_pre_update'] = dict(deterministic=loaded_summary, stochastic=noisy_summary,
+                optimizer_update_counts=model.optimizer_counts(), policy_source='unmodified BC checkpoint')
         replay = ReplayBuffer(config['algo']['buffer_capacity'], obs_dims, env.critic_state_dim, model.action_dims, seed)
+        if settings:
+            demos = DemonstrationReplay(resolve_path(settings['dataset']), resolve_path(config['bc_checkpoint']),
+                                        model, env_config, seed)
+            if len(demos.replay) < config['algo']['batch_size']:
+                raise ValueError('Training demos must contain at least one full batch')
+            model.initialize_log_std(settings['actor_init_log_std'])
+            model.configure_log_std()
+            if settings['prefill_replay']:
+                demos.prefill(replay)
+            extra_metadata.update(training_variant='bc_demo_finetune_masac', demonstration_replay=demos.metadata,
+                                  collision_fix_verified=False)
+        if config.get('bc_init_log_std') is not None:
+            # Keep raw loaded-BC probes above; only this optional treatment changes the std head.
+            actor_init = warm_start_from_bc(model, resolve_path(config['bc_checkpoint']),
+                expected_env_config=env_config, initial_log_std=config['bc_init_log_std'])
+            extra_metadata['actor_initialization'] = actor_init
+        if audit_config:
+            if demos is None:
+                demos = DemonstrationReplay(resolve_path(audit_config['dataset']), resolve_path(config['bc_checkpoint']),
+                                            model, env_config, seed)
+            auditor = BaselineAudit(model, reference_actors, demos, audit_config, run_dir)
+            extra_metadata['baseline_audit'] = auditor.metadata
+            extra_metadata['actor_update_order'] = 'sequential: actor1 loss sees newly updated actor0; preserved'
         metadata = run_metadata(run_dir, config, env_config, model, replay, device, extra_metadata=extra_metadata)
-        logger = RunLogger(run_dir, dict(episodes=EPISODE_FIELDS, losses=LOSS_FIELDS, evaluation=EVAL_FIELDS))
+        loss_fields = LOSS_FIELDS + (['bc_loss_0', 'bc_loss_1', 'actor_updated', 'demo_ratio'] if settings else [])
+        fields = dict(episodes=EPISODE_FIELDS, losses=loss_fields, evaluation=EVAL_FIELDS)
+        if settings:
+            from rel301m.envs.reward_components import REWARD_COMPONENT_FIELDS, reward_components
+            fields.update(reward_components=['step', *REWARD_COMPONENT_FIELDS, 'tilt_valid', 'total_reward'],
+                          validation=['step', 'updates', 'actor_updates', 'validation_mse_0', 'validation_mse_1'],
+                          critic_pretrain=['update', 'q_loss', 'target_q_mean', 'td_abs_mean'])
+        if auditor:
+            fields['early_diagnostics'] = ['environment_steps', 'updates', *COUNTER_FIELDS, *AUDIT_METRICS, *DRIFT_FIELDS]
+            fields['policy_diagnostics'] = ['environment_steps', 'mode', 'episodes', 'mean_return', 'success_rate',
+                'final_success_rate', 'initialization_sequence_sha256', *COUNTER_FIELDS]
+        logger = RunLogger(run_dir, fields)
         writer, writers = logger.tensorboard, logger.writers
+        def record_audit(metrics, environment_steps):
+            if auditor and model.critic_optimizer_updates % audit_config['interval_updates'] == 0:
+                row = auditor.row(model, environment_steps, metrics)
+                writers['early_diagnostics'].writerow(row)
+                for key in DRIFT_FIELDS:
+                    writer.add_scalar(f'audit/{key}', row[key], environment_steps)
+        if auditor:
+            writers['early_diagnostics'].writerow(auditor.row(model, 0, {}))
         rng = np.random.default_rng(seed)
         # Establish an actual random-policy reference before updates.
         tick = time.perf_counter()
@@ -184,12 +273,64 @@ def train(config, run_dir=None):
         (run_dir / 'random_baseline.json').write_text(json.dumps(baseline, indent=2)+'\n', encoding='utf-8')
         evaluation_seconds += time.perf_counter() - tick
         progress.write(f'Random baseline: {json.dumps(baseline)}')
+        if settings or config.get('bc_init_log_std') is not None:
+            initial_eval_start = time.perf_counter()
+            progress.set_phase('initial BC evaluation', episodes=config['eval_episodes'])
+            initial_rows, initial_summary = evaluate_policy(eval_env, model, config['eval_episodes'], config['eval_seed'],
+                initial_rng_state=eval_rng_state, episode_callback=progress.episode_completed)
+            write_episodes(run_dir / 'initial_bc_episodes.csv', initial_rows)
+            (run_dir / 'initial_bc_evaluation.json').write_text(json.dumps(initial_summary, indent=2)+'\n')
+            initial_score = (initial_summary['success_rate'], initial_summary['mean_return'])
+            model.save(run_dir / 'initial_bc.pt', dict(metadata, step=0, evaluation=initial_summary))
+            model.save(run_dir / 'best.pt', dict(metadata, step=0, evaluation=initial_summary,
+                                                selection_episodes=config['eval_episodes']))
+            progress.set_phase('initial stochastic BC evaluation', episodes=config['eval_episodes'])
+            # A diagnostic rollout must not change the subsequent training RNG stream.
+            devices = list(range(torch.cuda.device_count())) if device == 'cuda' else []
+            with torch.random.fork_rng(devices=devices):
+                stochastic_rows, stochastic_summary = evaluate_policy(eval_env, model, config['eval_episodes'],
+                    config['eval_seed'], initial_rng_state=eval_rng_state,
+                    episode_callback=progress.episode_completed, deterministic=False)
+            write_episodes(run_dir / 'initial_stochastic_bc_episodes.csv', stochastic_rows)
+            (run_dir / 'initial_stochastic_bc_evaluation.json').write_text(json.dumps(stochastic_summary, indent=2)+'\n')
+            if initial_summary['initialization_sequence_sha256'] != stochastic_summary['initialization_sequence_sha256']:
+                raise RuntimeError('Initial deterministic/stochastic evaluation states differ')
+            evaluation_seconds += time.perf_counter() - initial_eval_start
+            if settings:
+                writers['validation'].writerow(dict(step=0, updates=model.updates, actor_updates=0,
+                                                   **demos.validation_metrics(model)))
+        elif reference_actors is not None:
+            initial_score = (loaded_summary['success_rate'], loaded_summary['mean_return'])
+            model.save(run_dir / 'initial_bc.pt', dict(metadata, step=0, evaluation=loaded_summary))
+            model.save(run_dir / 'best.pt', dict(metadata, step=0, evaluation=loaded_summary, selection_episodes=config['eval_episodes']))
+        if settings:
+            original_lrs = [group['lr'] for group in model.q_optimizer.param_groups]
+            progress.set_phase('critic pretrain')
+            pretrain_start = time.perf_counter()
+            try:
+                for group in model.q_optimizer.param_groups:
+                    group['lr'] = settings['critic_pretrain_lr']
+                for pretrain_updates in range(1, settings['critic_pretrain_updates'] + 1):
+                    metrics = model.update(demos.replay.sample(config['algo']['batch_size'], device), update_actor=False)
+                    record_audit(metrics, 0)
+                    if pretrain_updates % config['log_interval'] == 0 or pretrain_updates == settings['critic_pretrain_updates']:
+                        writers['critic_pretrain'].writerow(dict(update=pretrain_updates,
+                            **{key: metrics[key] for key in ('q_loss', 'target_q_mean', 'td_abs_mean')}))
+                        progress.update(0, f'critic updates={pretrain_updates}/{settings["critic_pretrain_updates"]}')
+            finally:
+                for group, lr in zip(model.q_optimizer.param_groups, original_lrs):
+                    group['lr'] = lr
+            update_seconds += time.perf_counter() - pretrain_start
+            model.save(run_dir / 'post_critic_pretrain.pt', dict(metadata, step=0, critic_pretrain_updates=pretrain_updates))
+            logger.flush()
+        if auditor and settings:
+            auditor.assert_frozen(model, 0)
         progress.set_phase('warmup' if config['algo']['warmup_steps'] else 'training')
         episode, episode_steps, episode_return = 0, 0, 0.0
         initial = env.check_success()
         ever_success, final_success, first_success = initial, initial, 0 if initial else None
         recent_success = deque(maxlen=100)
-        best_score = (-1.0, -float('inf'))
+        best_score = initial_score if reference_actors is not None else (-1.0, -float('inf'))
         for step in range(1, config['total_steps'] + 1):
             if step == config['algo']['warmup_steps'] + 1:
                 progress.set_phase('training')
@@ -222,6 +363,11 @@ def train(config, run_dir=None):
             replay.add(*current_obs, state, *actions, reward,
                        *[next_obs[a]['actor_obs'] for a in env.agent_ids], env.critic_state, done, timeout=bool(done))
             completed_steps = step
+            if settings and (step % config['log_interval'] == 0 or done):
+                components = reward_components(env._env, reward)
+                writers['reward_components'].writerow(dict(step=step, **components))
+                for key, value in components.items():
+                    writer.add_scalar(f'reward/{key}', value, step)
             episode_return += float(reward)
             final_success = env.check_success()
             ever_success |= final_success
@@ -231,8 +377,23 @@ def train(config, run_dir=None):
             if step >= config['algo']['warmup_steps'] and len(replay) >= config['algo']['batch_size']:
                 tick = time.perf_counter()
                 for _ in range(config['algo']['updates_per_step']):
-                    last_metrics = model.update(replay.sample(config['algo']['batch_size'], device),
-                                                collect_diagnostics=step % config['log_interval'] == 0 or step == config['total_steps'])
+                    update_kwargs = dict(collect_diagnostics=step % config['log_interval'] == 0 or step == config['total_steps'] or
+                        bool(auditor and (model.critic_optimizer_updates + 1) % audit_config['interval_updates'] == 0))
+                    if settings:
+                        ratio = demo_ratio(settings, step)
+                        batch = demos.sample_mixed(replay, config['algo']['batch_size'], ratio, device)
+                        update_kwargs.update(demo_batch=demos.replay.sample(config['algo']['batch_size'], device),
+                            update_actor=model.updates - pretrain_updates >= settings['actor_freeze_updates'])
+                    else:
+                        batch = replay.sample(config['algo']['batch_size'], device)
+                        update_kwargs['update_actor'] = model.critic_optimizer_updates >= config['algo'].get('critic_only_updates', 0)
+                    if auditor:
+                        auditor.before_update(model, step, update_kwargs.get('update_actor', True))
+                    last_metrics = model.update(batch, **update_kwargs)
+                    record_audit(last_metrics, step)
+                    if settings:
+                        last_metrics['demo_ratio'] = ratio
+                        actor_updates += last_metrics['actor_updated']
                     if 'td_abs_p99' in last_metrics:
                         diagnostic_metrics, diagnostic_step = last_metrics, step
                     for key in gradient_min:
@@ -241,7 +402,7 @@ def train(config, run_dir=None):
                         gradient_max[key] = value if gradient_max[key] is None else max(gradient_max[key], value)
                 update_seconds += time.perf_counter() - tick
                 if step % config['log_interval'] == 0:
-                    writers['losses'].writerow(dict(step=step, updates=model.updates, **last_metrics))
+                    writers['losses'].writerow(dict(step=step, environment_steps=step, updates=model.updates, **last_metrics))
                     for key, value in last_metrics.items():
                         writer.add_scalar(f'losses/{key}', value, step)
                         writer.add_scalar(tensorboard_tag(key), value, step)
@@ -268,10 +429,14 @@ def train(config, run_dir=None):
                     episode_steps, episode_return = 0, 0.0
                     initial = env.check_success()
                     ever_success, final_success, first_success = initial, initial, 0 if initial else None
-            progress.update(step, f'updates={model.updates}')
-            if step % config['eval_interval'] == 0 or step == config['total_steps']:
+            counts = model.optimizer_counts()
+            progress.update(step, f'q={counts["critic_optimizer_updates"]} actors={model.actor_optimizer_updates} alpha={counts["alpha_optimizer_updates"]}')
+            regular_eval = step % config['eval_interval'] == 0 or step == config['total_steps']
+            early_eval = bool(auditor and step in audit_config['early_eval_steps'])
+            if regular_eval or early_eval:
                 tick = time.perf_counter()
-                evaluation_episodes = config['final_eval_episodes'] if step == config['total_steps'] else config['eval_episodes']
+                evaluation_episodes = (config['final_eval_episodes'] if step == config['total_steps'] else
+                    config['eval_episodes'] if regular_eval else audit_config['early_eval_episodes'])
                 progress.set_phase('evaluation', episodes=evaluation_episodes)
                 rows, summary = evaluate_policy(eval_env, model, evaluation_episodes, config['eval_seed'],
                                                 initial_rng_state=eval_rng_state, episode_callback=progress.episode_completed)
@@ -280,6 +445,29 @@ def train(config, run_dir=None):
                     raise RuntimeError('Evaluation initialization sequence differs from paired random reference')
                 if step == config['total_steps']:
                     final_evaluation = summary
+                if settings:
+                    validation = demos.validation_metrics(model)
+                    writers['validation'].writerow(dict(step=step, updates=model.updates, actor_updates=actor_updates, **validation))
+                    for key, value in validation.items():
+                        writer.add_scalar(f'bc/{key}', value, step)
+                if auditor:
+                    for mode, report in [('deterministic', summary)]:
+                        writers['policy_diagnostics'].writerow(dict(environment_steps=step, mode=mode,
+                            **{k: report[k] for k in ('episodes', 'mean_return', 'success_rate', 'final_success_rate', 'initialization_sequence_sha256')},
+                            **model.optimizer_counts()))
+                    progress.set_phase('stochastic audit evaluation', episodes=audit_config['stochastic_eval_episodes'])
+                    with torch.random.fork_rng(devices=list(range(torch.cuda.device_count())) if device == 'cuda' else []):
+                        stochastic_rows, stochastic = evaluate_policy(eval_env, model, audit_config['stochastic_eval_episodes'],
+                            config['eval_seed'], initial_rng_state=eval_rng_state,
+                            episode_callback=progress.episode_completed, deterministic=False)
+                    expected_stochastic = hashlib.sha256(''.join(r['initial_state_sha256'] for r in
+                        baseline_rows[:audit_config['stochastic_eval_episodes']]).encode()).hexdigest()
+                    if stochastic['initialization_sequence_sha256'] != expected_stochastic:
+                        raise RuntimeError('Stochastic audit initialization sequence differs')
+                    write_episodes(run_dir / f'stochastic_{step:07d}_episodes.csv', stochastic_rows)
+                    writers['policy_diagnostics'].writerow(dict(environment_steps=step, mode='stochastic',
+                        **{k: stochastic[k] for k in ('episodes', 'mean_return', 'success_rate', 'final_success_rate', 'initialization_sequence_sha256')},
+                        **model.optimizer_counts()))
                 evaluation_seconds += time.perf_counter() - tick
                 writers['evaluation'].writerow(dict(step=step, **summary))
                 write_episodes(run_dir / f'eval_{step:07d}_episodes.csv', rows)
@@ -290,7 +478,7 @@ def train(config, run_dir=None):
                 selection_rows = rows[:config['eval_episodes']]
                 score = (float(np.mean([r['ever_success'] for r in selection_rows])),
                          float(np.mean([r['episode_return'] for r in selection_rows])))
-                if score > best_score:
+                if regular_eval and score > best_score:
                     best_score = score
                     model.save(run_dir / 'best.pt', dict(metadata, step=step, evaluation=summary,
                                                        selection_episodes=len(selection_rows)))
@@ -316,7 +504,12 @@ def train(config, run_dir=None):
                        cuda_peak_allocated_bytes=torch.cuda.max_memory_allocated() if device == 'cuda' else None,
                        cuda_peak_reserved_bytes=torch.cuda.max_memory_reserved() if device == 'cuda' else None,
                        random_baseline=baseline, final_evaluation=summary,
-                       last_update_metrics=last_metrics)
+                       last_update_metrics=last_metrics, optimizer_update_counts=model.optimizer_counts())
+        if settings:
+            summary['fine_tune'] = dict(critic_pretrain_updates=pretrain_updates, actor_updates=actor_updates,
+                validation=demos.validation_metrics(model), collision_fix_verified=False)
+        if auditor and not auditor.first_actor_update:
+            auditor.assert_frozen(model, step)
         write_diagnostics('completed')
         (run_dir / 'summary.json').write_text(json.dumps(summary, indent=2, allow_nan=False)+'\n', encoding='utf-8')
         progress.write(json.dumps(summary, indent=2, allow_nan=False))

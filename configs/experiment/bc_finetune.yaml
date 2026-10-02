@@ -1,0 +1,19 @@
+name: bc_finetune
+algo_config: configs/algo/masac_bc_finetune.yaml
+env_config: configs/env/two_arm_lift.yaml
+bc_checkpoint: experiments/phase3/bc_seed42/best.pt
+seed: 0
+total_steps: 10000
+device: auto
+torch_threads: 1
+eval_interval: 1000
+eval_episodes: 10
+final_eval_episodes: 10
+eval_seed: 20000
+checkpoint_interval: 1000
+log_interval: 100
+output_root: experiments/phase3
+predictor:
+  architecture: GRU
+  hidden_size: 128
+  enabled: false
