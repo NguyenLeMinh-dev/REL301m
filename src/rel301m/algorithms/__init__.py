@@ -1,0 +1,1 @@
+"""Continuous cooperative MASAC baseline."""

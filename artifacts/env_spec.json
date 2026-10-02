@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "measured_at": "2026-10-02T03:21:52.618947+00:00",
+  "versions": {
+    "python": "3.10.12",
+    "robosuite": "1.5.2",
+    "mujoco": "3.9.0",
+    "numpy": "1.26.4"
+  },
+  "config": {
+    "env_name": "TwoArmLift",
+    "robots": [
+      "Panda",
+      "Panda"
+    ],
+    "env_configuration": "opposed",
+    "controller": "BASIC",
+    "has_renderer": false,
+    "has_offscreen_renderer": false,
+    "use_camera_obs": false,
+    "use_object_obs": true,
+    "reward_shaping": true,
+    "reward_scale": 1.0,
+    "control_freq": 20,
+    "horizon": 200,
+    "ignore_done": false,
+    "seed": 0
+  },
+  "environment_class": "TwoArmLift",
+  "robot_count": 2,
+  "control_freq": 20,
+  "horizon": 200,
+  "observation_spec_file": "observation_spec.json",
+  "action_spec_file": "action_spec.json",
+  "reward_contract": {
+    "reward_shaping": true,
+    "reward_scale": 1.0,
+    "success_method": "env._check_success()",
+    "success_height_margin_m": 0.1,
+    "success_requires_tilt_check": false,
+    "reward_tilt_gate_degrees": 30,
+    "reward_normalization_divisor": 3.0,
+    "raw_reward_when_success": "3 * tilt_gate",
+    "raw_shaped_reward_when_not_success": "10 * tilt_gate * clip(elevation - 0.05, 0, 0.15) + 0.25 * (grasp0 + grasp1) + 0.5 * (1 - tanh(10 * distance0)) + 0.5 * (1 - tanh(10 * distance1))",
+    "termination": "done = (timestep >= horizon) and not ignore_done; success does not terminate",
+    "success_is_not_return_threshold": true
+  },
+  "episode_metrics": {
+    "episode_return": "Sum of step rewards; independent of success.",
+    "ever_success": "True if upstream task success is seen at reset or after any step.",
+    "first_success_step": "0 for success at reset, otherwise first successful 1-based step; null if never successful.",
+    "final_success": "Upstream task success after the final step.",
+    "episode_length": "Number of control steps actually executed."
+  },
+  "source_evidence": {
+    "reward": {
+      "path": "/home/minh/Documents/REL301m/REL301m-research/.venv-phase0/lib/python3.10/site-packages/robosuite/environments/manipulation/two_arm_lift.py",
+      "start_line": 221,
+      "sha256": "6df4bd2eea17c3e1c978de1fe37e9bfd0540de38f6256ee1a7d016cd4a6e07d4",
+      "source": "    def reward(self, action=None):\n        \"\"\"\n        Reward function for the task.\n\n        Sparse un-normalized reward:\n\n            - a discrete reward of 3.0 is provided if the pot is lifted and is parallel within 30 deg to the table\n\n        Un-normalized summed components if using reward shaping:\n\n            - Reaching: in [0, 0.5], per-arm component that is proportional to the distance between each arm and its\n              respective pot handle, and exactly 0.5 when grasping the handle\n              - Note that the agent only gets the lifting reward when flipping no more than 30 degrees.\n            - Grasping: in {0, 0.25}, binary per-arm component awarded if the gripper is grasping its correct handle\n            - Lifting: in [0, 1.5], proportional to the pot's height above the table, and capped at a certain threshold\n\n        Note that the final reward is normalized and scaled by reward_scale / 3.0 as\n        well so that the max score is equal to reward_scale\n\n        Args:\n            action (np array): [NOT USED]\n\n        Returns:\n            float: reward value\n        \"\"\"\n        reward = 0\n\n        # check if the pot is tilted more than 30 degrees\n        mat = T.quat2mat(self._pot_quat)\n        z_unit = [0, 0, 1]\n        z_rotated = np.matmul(mat, z_unit)\n        cos_z = np.dot(z_unit, z_rotated)\n        cos_30 = np.cos(np.pi / 6)\n        direction_coef = 1 if cos_z >= cos_30 else 0\n\n        # check for goal completion: cube is higher than the table top above a margin\n        if self._check_success():\n            reward = 3.0 * direction_coef\n\n        # use a shaping reward\n        elif self.reward_shaping:\n            # lifting reward\n            pot_bottom_height = self.sim.data.site_xpos[self.pot_center_id][2] - self.pot.top_offset[2]\n            table_height = self.sim.data.site_xpos[self.table_top_id][2]\n            elevation = pot_bottom_height - table_height\n            r_lift = min(max(elevation - 0.05, 0), 0.15)\n            reward += 10.0 * direction_coef * r_lift\n\n            _gripper0_to_handle0 = self._gripper0_to_handle0\n            _gripper1_to_handle1 = self._gripper1_to_handle1\n\n            # gh stands for gripper-handle\n            # When grippers are far away, tell them to be closer\n\n            # Get contacts\n            (g0, g1) = (\n                (self.robots[0].gripper[\"right\"], self.robots[0].gripper[\"left\"])\n                if self.env_configuration == \"single-robot\"\n                else (self.robots[0].gripper, self.robots[1].gripper)\n            )\n\n            _g0h_dist = np.linalg.norm(_gripper0_to_handle0)\n            _g1h_dist = np.linalg.norm(_gripper1_to_handle1)\n\n            # Grasping reward\n            if self._check_grasp(gripper=g0, object_geoms=self.pot.handle0_geoms):\n                reward += 0.25\n            # Reaching reward\n            reward += 0.5 * (1 - np.tanh(10.0 * _g0h_dist))\n\n            # Grasping reward\n            if self._check_grasp(gripper=g1, object_geoms=self.pot.handle1_geoms):\n                reward += 0.25\n            # Reaching reward\n            reward += 0.5 * (1 - np.tanh(10.0 * _g1h_dist))\n\n        if self.reward_scale is not None:\n            reward *= self.reward_scale / 3.0\n\n        return reward\n"
+    },
+    "success": {
+      "path": "/home/minh/Documents/REL301m/REL301m-research/.venv-phase0/lib/python3.10/site-packages/robosuite/environments/manipulation/two_arm_lift.py",
+      "start_line": 490,
+      "sha256": "60dcb021b269fed30c856dfd501771bbd5a87274eb02bcfee05c680dbdf634b1",
+      "source": "    def _check_success(self):\n        \"\"\"\n        Check if pot is successfully lifted\n\n        Returns:\n            bool: True if pot is lifted\n        \"\"\"\n        pot_bottom_height = self.sim.data.site_xpos[self.pot_center_id][2] - self.pot.top_offset[2]\n        table_height = self.sim.data.site_xpos[self.table_top_id][2]\n\n        # cube is higher than the table top above a margin\n        return pot_bottom_height > table_height + 0.10\n"
+    },
+    "termination": {
+      "path": "/home/minh/Documents/REL301m/REL301m-research/.venv-phase0/lib/python3.10/site-packages/robosuite/environments/base.py",
+      "start_line": 492,
+      "sha256": "2ff3bf53aead956e59815ce28ece3920af3777f6a2d7e9b56b04b52e542a7123",
+      "source": "    def _post_action(self, action):\n        \"\"\"\n        Do any housekeeping after taking an action.\n        Args:\n            action (np.array): Action to execute within the environment\n        Returns:\n            3-tuple:\n                - (float) reward from the environment\n                - (bool) whether the current episode is completed or not\n                - (dict) empty dict to be filled with information by subclassed method\n        \"\"\"\n        reward = self.reward(action)\n\n        # done if number of elapsed timesteps is greater than horizon\n        self.done = (self.timestep >= self.horizon) and not self.ignore_done\n\n        return reward, self.done, {}\n"
+    }
+  }
+}

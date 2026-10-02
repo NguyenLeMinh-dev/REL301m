@@ -1,0 +1,18 @@
+name: final
+algo_config: configs/algo/masac.yaml
+env_config: configs/env/two_arm_lift.yaml
+seed: 0
+total_steps: 700000
+device: auto
+torch_threads: 1
+eval_interval: 10000
+eval_episodes: 10
+checkpoint_interval: 10000
+log_interval: 100
+output_root: experiments/phase3
+predictor:
+  architecture: GRU
+  hidden_size: 128
+  enabled: false
+eval_seed: 20000
+final_eval_episodes: 100

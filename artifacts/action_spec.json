@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "action_dim": 14,
+  "shape": [
+    14
+  ],
+  "dtype": "float64",
+  "low": [
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0
+  ],
+  "high": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "slice_convention": "start inclusive, stop exclusive",
+  "robots": [
+    {
+      "robot_id": 0,
+      "robot_name": "Panda0",
+      "naming_prefix": "robot0_",
+      "action_dim": 7,
+      "joint_slice": [
+        0,
+        7
+      ],
+      "composite_controller": "BASIC",
+      "composite_controller_class": "CompositeController",
+      "action_index_info": [
+        "right: 0:6",
+        "right_gripper: 6:7"
+      ],
+      "action_dimension_info": [
+        "right: 6 dim",
+        "right_gripper: 1 dim"
+      ],
+      "action_info": {
+        "Action Dimension": [
+          7
+        ],
+        "right": [
+          0,
+          6
+        ],
+        "right_gripper": [
+          6,
+          7
+        ]
+      },
+      "parts": [
+        {
+          "name": "right",
+          "controller_type": "OSC_POSE",
+          "controller_class": "OperationalSpaceController",
+          "action_dim": 6,
+          "robot_slice": [
+            0,
+            6
+          ],
+          "joint_slice": [
+            0,
+            6
+          ],
+          "low": [
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          "high": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "input_type": "delta",
+          "input_ref_frame": "base",
+          "impedance_mode": "fixed"
+        },
+        {
+          "name": "right_gripper",
+          "controller_type": "GRIP",
+          "controller_class": "SimpleGripController",
+          "action_dim": 1,
+          "robot_slice": [
+            6,
+            7
+          ],
+          "joint_slice": [
+            6,
+            7
+          ],
+          "low": [
+            -1.0
+          ],
+          "high": [
+            1.0
+          ]
+        }
+      ]
+    },
+    {
+      "robot_id": 1,
+      "robot_name": "Panda1",
+      "naming_prefix": "robot1_",
+      "action_dim": 7,
+      "joint_slice": [
+        7,
+        14
+      ],
+      "composite_controller": "BASIC",
+      "composite_controller_class": "CompositeController",
+      "action_index_info": [
+        "right: 0:6",
+        "right_gripper: 6:7"
+      ],
+      "action_dimension_info": [
+        "right: 6 dim",
+        "right_gripper: 1 dim"
+      ],
+      "action_info": {
+        "Action Dimension": [
+          7
+        ],
+        "right": [
+          0,
+          6
+        ],
+        "right_gripper": [
+          6,
+          7
+        ]
+      },
+      "parts": [
+        {
+          "name": "right",
+          "controller_type": "OSC_POSE",
+          "controller_class": "OperationalSpaceController",
+          "action_dim": 6,
+          "robot_slice": [
+            0,
+            6
+          ],
+          "joint_slice": [
+            7,
+            13
+          ],
+          "low": [
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          "high": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "input_type": "delta",
+          "input_ref_frame": "base",
+          "impedance_mode": "fixed"
+        },
+        {
+          "name": "right_gripper",
+          "controller_type": "GRIP",
+          "controller_class": "SimpleGripController",
+          "action_dim": 1,
+          "robot_slice": [
+            6,
+            7
+          ],
+          "joint_slice": [
+            13,
+            14
+          ],
+          "low": [
+            -1.0
+          ],
+          "high": [
+            1.0
+          ]
+        }
+      ]
+    }
+  ]
+}

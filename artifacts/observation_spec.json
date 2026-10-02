@@ -1,0 +1,685 @@
+{
+  "schema_version": 1,
+  "returned_keys": [
+    "robot0_joint_pos",
+    "robot0_joint_pos_cos",
+    "robot0_joint_pos_sin",
+    "robot0_joint_vel",
+    "robot0_joint_acc",
+    "robot0_eef_pos",
+    "robot0_eef_quat",
+    "robot0_eef_quat_site",
+    "robot0_gripper_qpos",
+    "robot0_gripper_qvel",
+    "robot1_joint_pos",
+    "robot1_joint_pos_cos",
+    "robot1_joint_pos_sin",
+    "robot1_joint_vel",
+    "robot1_joint_acc",
+    "robot1_eef_pos",
+    "robot1_eef_quat",
+    "robot1_eef_quat_site",
+    "robot1_gripper_qpos",
+    "robot1_gripper_qvel",
+    "pot_pos",
+    "pot_quat",
+    "handle0_xpos",
+    "handle1_xpos",
+    "gripper0_to_handle0",
+    "gripper1_to_handle1",
+    "robot0_proprio-state",
+    "robot1_proprio-state",
+    "object-state"
+  ],
+  "enabled_observables": [
+    "gripper0_to_handle0",
+    "gripper1_to_handle1",
+    "handle0_xpos",
+    "handle1_xpos",
+    "pot_pos",
+    "pot_quat",
+    "robot0_eef_pos",
+    "robot0_eef_quat",
+    "robot0_eef_quat_site",
+    "robot0_gripper_qpos",
+    "robot0_gripper_qvel",
+    "robot0_joint_acc",
+    "robot0_joint_pos",
+    "robot0_joint_pos_cos",
+    "robot0_joint_pos_sin",
+    "robot0_joint_vel",
+    "robot1_eef_pos",
+    "robot1_eef_quat",
+    "robot1_eef_quat_site",
+    "robot1_gripper_qpos",
+    "robot1_gripper_qvel",
+    "robot1_joint_acc",
+    "robot1_joint_pos",
+    "robot1_joint_pos_cos",
+    "robot1_joint_pos_sin",
+    "robot1_joint_vel"
+  ],
+  "active_observables": [
+    "gripper0_to_handle0",
+    "gripper1_to_handle1",
+    "handle0_xpos",
+    "handle1_xpos",
+    "pot_pos",
+    "pot_quat",
+    "robot0_eef_pos",
+    "robot0_eef_quat",
+    "robot0_eef_quat_site",
+    "robot0_gripper_qpos",
+    "robot0_gripper_qvel",
+    "robot0_joint_acc",
+    "robot0_joint_pos",
+    "robot0_joint_pos_cos",
+    "robot0_joint_pos_sin",
+    "robot0_joint_vel",
+    "robot1_eef_pos",
+    "robot1_eef_quat",
+    "robot1_eef_quat_site",
+    "robot1_gripper_qpos",
+    "robot1_gripper_qvel",
+    "robot1_joint_acc",
+    "robot1_joint_pos",
+    "robot1_joint_pos_cos",
+    "robot1_joint_pos_sin",
+    "robot1_joint_vel"
+  ],
+  "observables": {
+    "robot0_joint_pos": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_joint_pos_cos": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_joint_pos_sin": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_joint_vel": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_joint_acc": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_eef_pos": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_eef_quat": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_eef_quat_site": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_gripper_qpos": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot0_gripper_qvel": {
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_joint_pos": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_joint_pos_cos": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_joint_pos_sin": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_joint_vel": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_joint_acc": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_eef_pos": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_eef_quat": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_eef_quat_site": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_gripper_qpos": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "robot1_gripper_qvel": {
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "pot_pos": {
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "pot_quat": {
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "handle0_xpos": {
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "handle1_xpos": {
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "gripper0_to_handle0": {
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    },
+    "gripper1_to_handle1": {
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true
+    }
+  },
+  "observations": {
+    "robot0_joint_pos": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_0_local",
+      "description": "Arm joint positions (rad).",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_joint_pos_cos": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_0_local",
+      "description": "Cosine of arm joint positions (unitless).",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_joint_pos_sin": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_0_local",
+      "description": "Sine of arm joint positions (unitless).",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_joint_vel": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_0_local",
+      "description": "Arm joint velocities (rad/s).",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_joint_acc": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_0_local",
+      "description": "Arm joint accelerations (rad/s^2), simulator-derived.",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_eef_pos": {
+      "shape": [
+        3
+      ],
+      "dtype": "float64",
+      "size": 3,
+      "information_group": "robot_0_local",
+      "description": "EEF site position in world coordinates (m).",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_eef_quat": {
+      "shape": [
+        4
+      ],
+      "dtype": "float64",
+      "size": 4,
+      "information_group": "robot_0_local",
+      "description": "Legacy EEF BODY quaternion in world coordinates, xyzw; not the EEF site orientation.",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_eef_quat_site": {
+      "shape": [
+        4
+      ],
+      "dtype": "float32",
+      "size": 4,
+      "information_group": "robot_0_local",
+      "description": "EEF SITE quaternion in world coordinates, xyzw; consistent with eef_pos.",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_gripper_qpos": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64",
+      "size": 2,
+      "information_group": "robot_0_local",
+      "description": "Gripper finger joint positions (m for Panda's prismatic finger joints).",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_gripper_qvel": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64",
+      "size": 2,
+      "information_group": "robot_0_local",
+      "description": "Gripper finger joint velocities (m/s).",
+      "modality": "robot0_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_joint_pos": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_1_local",
+      "description": "Arm joint positions (rad).",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_joint_pos_cos": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_1_local",
+      "description": "Cosine of arm joint positions (unitless).",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_joint_pos_sin": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_1_local",
+      "description": "Sine of arm joint positions (unitless).",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_joint_vel": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_1_local",
+      "description": "Arm joint velocities (rad/s).",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_joint_acc": {
+      "shape": [
+        7
+      ],
+      "dtype": "float64",
+      "size": 7,
+      "information_group": "robot_1_local",
+      "description": "Arm joint accelerations (rad/s^2), simulator-derived.",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_eef_pos": {
+      "shape": [
+        3
+      ],
+      "dtype": "float64",
+      "size": 3,
+      "information_group": "robot_1_local",
+      "description": "EEF site position in world coordinates (m).",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_eef_quat": {
+      "shape": [
+        4
+      ],
+      "dtype": "float64",
+      "size": 4,
+      "information_group": "robot_1_local",
+      "description": "Legacy EEF BODY quaternion in world coordinates, xyzw; not the EEF site orientation.",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_eef_quat_site": {
+      "shape": [
+        4
+      ],
+      "dtype": "float32",
+      "size": 4,
+      "information_group": "robot_1_local",
+      "description": "EEF SITE quaternion in world coordinates, xyzw; consistent with eef_pos.",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_gripper_qpos": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64",
+      "size": 2,
+      "information_group": "robot_1_local",
+      "description": "Gripper finger joint positions (m for Panda's prismatic finger joints).",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot1_gripper_qvel": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64",
+      "size": 2,
+      "information_group": "robot_1_local",
+      "description": "Gripper finger joint velocities (m/s).",
+      "modality": "robot1_proprio",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "pot_pos": {
+      "shape": [
+        3
+      ],
+      "dtype": "float64",
+      "size": 3,
+      "information_group": "shared_object",
+      "description": "Pot body position in MuJoCo world coordinates (m).",
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "pot_quat": {
+      "shape": [
+        4
+      ],
+      "dtype": "float64",
+      "size": 4,
+      "information_group": "shared_object",
+      "description": "Pot body orientation in world coordinates, quaternion xyzw.",
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "handle0_xpos": {
+      "shape": [
+        3
+      ],
+      "dtype": "float64",
+      "size": 3,
+      "information_group": "shared_object",
+      "description": "Handle 0 site position in world coordinates (m).",
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "handle1_xpos": {
+      "shape": [
+        3
+      ],
+      "dtype": "float64",
+      "size": 3,
+      "information_group": "shared_object",
+      "description": "Handle 1 site position in world coordinates (m).",
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "gripper0_to_handle0": {
+      "shape": [
+        3
+      ],
+      "dtype": "float64",
+      "size": 3,
+      "information_group": "robot_0_object_relation",
+      "description": "Handle 0 minus robot 0 EEF site position, world-frame vector (m).",
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "gripper1_to_handle1": {
+      "shape": [
+        3
+      ],
+      "dtype": "float64",
+      "size": 3,
+      "information_group": "robot_1_object_relation",
+      "description": "Handle 1 minus robot 1 EEF site position, world-frame vector (m).",
+      "modality": "object",
+      "enabled": true,
+      "active": true,
+      "returned": true,
+      "aggregation_of": []
+    },
+    "robot0_proprio-state": {
+      "shape": [
+        50
+      ],
+      "dtype": "float64",
+      "size": 50,
+      "information_group": "robot_0_local",
+      "description": "Upstream concatenation of active/enabled proprioceptive sensors, including redundant encodings.",
+      "modality": "robot0_proprio",
+      "enabled": null,
+      "active": null,
+      "returned": true,
+      "aggregation_of": [
+        "robot0_joint_pos",
+        "robot0_joint_pos_cos",
+        "robot0_joint_pos_sin",
+        "robot0_joint_vel",
+        "robot0_joint_acc",
+        "robot0_eef_pos",
+        "robot0_eef_quat",
+        "robot0_eef_quat_site",
+        "robot0_gripper_qpos",
+        "robot0_gripper_qvel"
+      ]
+    },
+    "robot1_proprio-state": {
+      "shape": [
+        50
+      ],
+      "dtype": "float64",
+      "size": 50,
+      "information_group": "robot_1_local",
+      "description": "Upstream concatenation of active/enabled proprioceptive sensors, including redundant encodings.",
+      "modality": "robot1_proprio",
+      "enabled": null,
+      "active": null,
+      "returned": true,
+      "aggregation_of": [
+        "robot1_joint_pos",
+        "robot1_joint_pos_cos",
+        "robot1_joint_pos_sin",
+        "robot1_joint_vel",
+        "robot1_joint_acc",
+        "robot1_eef_pos",
+        "robot1_eef_quat",
+        "robot1_eef_quat_site",
+        "robot1_gripper_qpos",
+        "robot1_gripper_qvel"
+      ]
+    },
+    "object-state": {
+      "shape": [
+        19
+      ],
+      "dtype": "float64",
+      "size": 19,
+      "information_group": "joint_object_aggregate",
+      "description": "Concatenation of active/enabled object sensors; includes both robots' relative-handle vectors.",
+      "modality": "object",
+      "enabled": null,
+      "active": null,
+      "returned": true,
+      "aggregation_of": [
+        "pot_pos",
+        "pot_quat",
+        "handle0_xpos",
+        "handle1_xpos",
+        "gripper0_to_handle0",
+        "gripper1_to_handle1"
+      ]
+    }
+  }
+}

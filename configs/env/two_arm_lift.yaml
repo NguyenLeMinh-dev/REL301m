@@ -1,0 +1,14 @@
+env_name: TwoArmLift
+robots: [Panda, Panda]
+env_configuration: opposed
+controller: BASIC
+has_renderer: false
+has_offscreen_renderer: false
+use_camera_obs: false
+use_object_obs: true
+reward_shaping: true
+reward_scale: 1.0
+control_freq: 20
+horizon: 200
+ignore_done: false
+seed: 0

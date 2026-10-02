@@ -1,0 +1,15 @@
+name: masac
+hidden_dims: [256, 256]
+actor_lr: 0.0003
+critic_lr: 0.0003
+alpha_lr: 0.0003
+gamma: 0.99
+tau: 0.005
+batch_size: 256
+buffer_capacity: 300000
+warmup_steps: 10000
+updates_per_step: 1
+initial_alpha: 0.2
+# Derived independently from each live action dimension (currently -7 each).
+target_entropy: auto
+bootstrap_time_limits: true

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rel301m"
+version = "0.1.0"
+description = "System freeze and environment contract for cooperative dual-robot manipulation"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "robosuite==1.5.2",
+    "mujoco==3.9.0",
+    "PyYAML==6.0.3",
+    "numpy==1.26.4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+rl = ["torch==2.7.1+cu128", "tensorboard==2.20.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["rel301m*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

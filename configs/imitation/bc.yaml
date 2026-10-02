@@ -1,0 +1,14 @@
+seed: 42
+algo_config: configs/algo/masac.yaml
+dataset: data/demonstrations/two_arm_lift_scripted
+output_dir: experiments/phase3/bc_seed42
+device: auto
+torch_threads: 1
+epochs: 300
+batch_size: 256
+learning_rate: 0.0003
+validation_episodes: 5
+test_episodes: 5
+observation_std_floor: 0.01
+eval_seed: 20000
+eval_episodes: 10
