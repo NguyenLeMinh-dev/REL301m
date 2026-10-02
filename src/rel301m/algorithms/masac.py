@@ -35,6 +35,20 @@ class MASAC(nn.Module):
         self.target_entropy = torch.tensor([-size for size in self.action_dims], device=device, dtype=torch.float32)
         self.updates = 0
 
+    @torch.no_grad()
+    def initialize_log_std(self, value):
+        if not np.isfinite(value) or not -20 <= value <= 2:
+            raise ValueError("Initial log_std must be finite and within [-20, 2]")
+        for actor in self.actors:
+            actor.net[-1].weight[actor.action_dim:].zero_()
+            actor.net[-1].bias[actor.action_dim:].fill_(value)
+
+    def configure_log_std(self):
+        settings = self.config.get("fine_tune", {})
+        fixed = settings.get("actor_init_log_std") if self.updates < settings.get("freeze_log_std_updates", 0) else None
+        for actor in self.actors:
+            actor.fixed_log_std = fixed
+
     @property
     def device(self):
         return self.log_alpha.device
@@ -47,6 +61,7 @@ class MASAC(nn.Module):
     def act(self, observations, deterministic=False):
         if len(observations) != 2:
             raise ValueError("Exactly two actor observations are required")
+        self.configure_log_std()
         # Deliberately accept only each actor's own observation vector.
         return tuple(actor.sample(torch.as_tensor(obs, dtype=torch.float32, device=self.device), deterministic)[0].cpu().numpy()
                      for actor, obs in zip(self.actors, observations))
@@ -84,8 +99,14 @@ class MASAC(nn.Module):
             for parameter, target_parameter in zip(source.parameters(), target.parameters()):
                 target_parameter.lerp_(parameter, self.config['tau'])
 
-    def update(self, batch, *, collect_diagnostics=True):
+    def update(self, batch, *, collect_diagnostics=True, demo_batch=None, update_actor=True):
+        self.configure_log_std()
         require_finite('replay batch', *batch.values())
+        coefficient = self.config.get('fine_tune', {}).get('lambda_bc', 0.0)
+        if update_actor and coefficient > 0 and demo_batch is None:
+            raise ValueError('BC auxiliary loss requires a demonstration batch')
+        if demo_batch is not None:
+            require_finite('demo batch', *demo_batch.values())
         if any(p.grad is not None for net in (self.target_q1, self.target_q2) for p in net.parameters()):
             raise RuntimeError('Target networks must not receive gradients')
         target = self.critic_target(batch)
@@ -100,27 +121,51 @@ class MASAC(nn.Module):
         require_finite('critic loss/gradient', loss_q.item(), q_grad)
         self.q_optimizer.step()
         self.q_optimizer.zero_grad(set_to_none=True)
-        actor_losses, log_probs, actor_grads = [], [], []
-        self.q1.requires_grad_(False)
-        self.q2.requires_grad_(False)
-        try:
-            for i, optimizer in enumerate(self.actor_optimizers):
-                loss, log_prob = self.actor_loss(i, batch, diagnostics=diagnostics if collect_diagnostics else None)
-                optimizer.zero_grad(set_to_none=True)
-                loss.backward()
-                actor_grads.append(self._gradient_norm(self.actors[i].parameters()))
-                require_finite('actor loss/gradient', loss.item(), actor_grads[-1])
-                optimizer.step()
-                optimizer.zero_grad(set_to_none=True)
-                actor_losses.append(loss.detach())
-                log_probs.append(log_prob.detach())
-        finally:
-            self.q1.requires_grad_(True)
-            self.q2.requires_grad_(True)
-        alpha_loss = sum(-(self.log_alpha[i] * (log_probs[i] + self.target_entropy[i])).mean() for i in range(2))
-        self.alpha_optimizer.zero_grad(set_to_none=True)
-        alpha_loss.backward()
-        self.alpha_optimizer.step()
+        if update_actor:
+            actor_losses, log_probs, actor_grads = [], [], []
+            bc_losses = []
+            self.q1.requires_grad_(False)
+            self.q2.requires_grad_(False)
+            try:
+                for i, optimizer in enumerate(self.actor_optimizers):
+                    loss, log_prob = self.actor_loss(i, batch, diagnostics=diagnostics if collect_diagnostics else None)
+                    bc_loss = torch.zeros((), device=self.device)
+                    if coefficient > 0:
+                        mean, _ = self.actors[i](demo_batch[f'o{i}'])
+                        predicted = self.actors[i].action_bias + self.actors[i].action_scale * mean.tanh()
+                        bc_loss = F.mse_loss(predicted, demo_batch[f'a{i}'])
+                        loss = loss + coefficient * bc_loss
+                    bc_losses.append(bc_loss.detach())
+                    optimizer.zero_grad(set_to_none=True)
+                    loss.backward()
+                    actor_grads.append(self._gradient_norm(self.actors[i].parameters()))
+                    require_finite('actor loss/gradient', loss.item(), actor_grads[-1])
+                    optimizer.step()
+                    optimizer.zero_grad(set_to_none=True)
+                    actor_losses.append(loss.detach())
+                    log_probs.append(log_prob.detach())
+            finally:
+                self.q1.requires_grad_(True)
+                self.q2.requires_grad_(True)
+            alpha_loss = sum(-(self.log_alpha[i] * (log_probs[i] + self.target_entropy[i])).mean() for i in range(2))
+            if self.config.get('fine_tune', {}).get('alpha_mode', 'auto') == 'auto':
+                self.alpha_optimizer.zero_grad(set_to_none=True)
+                alpha_loss.backward()
+                self.alpha_optimizer.step()
+            else:
+                alpha_loss = torch.zeros((), device=self.device)
+        else:
+            actor_losses = [torch.zeros((), device=self.device)] * 2
+            actor_grads = [0.0, 0.0]
+            with torch.no_grad():
+                samples = [actor.sample(batch[f'o{i}']) for i, actor in enumerate(self.actors)]
+                log_probs = [sample[1] for sample in samples]
+                if collect_diagnostics:
+                    for i, sample in enumerate(samples):
+                        diagnostics.update({f'{key}_{i}': value for key, value in
+                            action_metrics(self.actors[i], batch[f'o{i}'], sample[0]).items()})
+            bc_losses = [torch.zeros((), device=self.device)] * 2
+            alpha_loss = torch.zeros((), device=self.device)
         self.soft_update()
         require_finite('model parameters', *self.parameters())
         self.updates += 1
@@ -134,6 +179,8 @@ class MASAC(nn.Module):
                             f'actor_{i}_grad_norm': actor_grads[i],
                             f'log_pi_mean_{i}': log_probs[i].mean().item(),
                             f'entropy_{i}': -log_probs[i].mean().item()})
+        if 'fine_tune' in self.config:
+            metrics.update(actor_updated=int(update_actor), bc_loss_0=bc_losses[0].item(), bc_loss_1=bc_losses[1].item())
         require_finite('MASAC metrics', *metrics.values())
         if min(metrics['alpha_0'], metrics['alpha_1']) <= 0:
             raise FloatingPointError('Alpha underflowed to zero')

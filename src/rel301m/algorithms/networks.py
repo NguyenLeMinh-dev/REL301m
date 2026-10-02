@@ -30,6 +30,9 @@ class GaussianActor(nn.Module):
         if observations.shape[-1] != self.obs_dim:
             raise ValueError("Actor observation dimension mismatch")
         mean, log_std = self.net(observations).chunk(2, dim=-1)
+        fixed = getattr(self, "fixed_log_std", None)
+        if fixed is not None:
+            log_std = torch.full_like(log_std, fixed)
         return mean, log_std.clamp(-20, 2)
 
     def sample(self, observations, deterministic=False):

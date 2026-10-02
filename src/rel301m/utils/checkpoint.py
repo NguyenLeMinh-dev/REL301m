@@ -29,6 +29,7 @@ def load_checkpoint(path, device='cpu', load_optimizers=True):
     model = MASAC(payload['obs_dims'], payload['state_dim'], payload['action_specs'], payload['config'], device)
     model.load_state_dict(payload['model'])
     model.updates = payload['updates']
+    model.configure_log_std()
     if load_optimizers:
         for optimizer, state in zip(model.actor_optimizers, payload['actor_optimizers']):
             optimizer.load_state_dict(state)

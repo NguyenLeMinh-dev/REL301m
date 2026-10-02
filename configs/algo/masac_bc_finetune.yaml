@@ -1,0 +1,27 @@
+name: masac_bc_finetune
+hidden_dims: [256, 256]
+actor_lr: 0.0003
+critic_lr: 0.0003
+alpha_lr: 0.0003
+gamma: 0.99
+tau: 0.005
+batch_size: 256
+buffer_capacity: 300000
+warmup_steps: 0
+updates_per_step: 1
+initial_alpha: 0.02
+target_entropy: auto
+bootstrap_time_limits: true
+fine_tune:
+  dataset: data/demonstrations/two_arm_lift_scripted
+  lambda_bc: 0.5
+  actor_init_log_std: -3.0
+  freeze_log_std_updates: 3000
+  critic_pretrain_updates: 1000
+  critic_pretrain_lr: 0.0001
+  actor_freeze_updates: 1000
+  prefill_replay: true
+  demo_ratio_initial: 0.75
+  demo_ratio_final: 0.5
+  demo_ratio_decay_steps: 5000
+  alpha_mode: auto

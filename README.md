@@ -104,6 +104,7 @@ Các workflow tiếp theo được chạy thủ công theo tài liệu:
 - [Baseline MASAC và hyperparameters](docs/baseline_masac.md).
 - [Pilot 300k × 3 seeds](docs/pilot_protocol.md), [diagnostics](docs/pilot_diagnostics.md).
 - [Thu scripted demos → BC → actor-only initialization](docs/bc_warm_start.md), [kết quả BC](docs/bc_pipeline_report.md).
+- [Fine-tune ngắn với demos + BC loss](docs/bc_finetune.md), [kết quả kiểm chứng](docs/bc_finetune_report.md).
 - [So sánh BC-init và scratch trên cùng seeds](docs/bc_vs_scratch_protocol.md).
 - [Xem hai robot trực tiếp hoặc xuất MP4](docs/visualization.md).
 

@@ -21,7 +21,7 @@ from .metrics import EPISODE_FIELDS, episode_record, summarize_episodes
 
 
 def evaluate_policy(env, model, episodes=10, seed=0, random_policy=False, *, initial_rng_state=None,
-                    episode_callback=None):
+                    episode_callback=None, deterministic=True):
     if episodes <= 0:
         raise ValueError("episodes must be positive")
     if initial_rng_state is not None:
@@ -41,7 +41,7 @@ def evaluate_policy(env, model, episodes=10, seed=0, random_policy=False, *, ini
             if random_policy:
                 actions = tuple(rng.uniform(low, high) for low, high in bounds)
             else:
-                actions = model.act([observations[agent]['actor_obs'] for agent in env.agent_ids], deterministic=True)
+                actions = model.act([observations[agent]['actor_obs'] for agent in env.agent_ids], deterministic=deterministic)
             observations, reward, done, _ = env.step(*actions)
             total += float(reward)
             success = env.check_success()
