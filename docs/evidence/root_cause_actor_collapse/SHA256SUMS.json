@@ -1,0 +1,26 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "A_fixed_critic_gradients.jsonl": "9afeba5b66dd4c03101c4487c8f19ad6dddf180fe68b2b72b66e1ab2366c6196",
+    "B_fixed_actor_gradients.jsonl": "f233b8d743564281e45e2dd794f0231494c3dd7174d29710063d15ac0222eb49",
+    "C_no_Q_actor_gradient_gradients.jsonl": "5fa8e3d0ecb3ec108c86c6a1698f3caf0e5af622c22ff51ad4b2dfed354662bb",
+    "D_no_BC_gradients.jsonl": "a358b461c36c790287872d28938220fbee69751f797de204ea83a6ee3c57e6e1",
+    "E_no_entropy_gradients.jsonl": "9a27e7281c9a0ae5dd40dc18d366e4479f90d0533fabe9a645574c483abf7537",
+    "F_BC_only_gradients.jsonl": "b2860a323310fb2a4b45766ab960b1a31e5eb8d6e5c994ce2c5a13a48bb4d8dc",
+    "actor_updates.jsonl": "07886091b0eb6633fd33167582ae595252e17eee18e621a63fb077ddd8a01b93",
+    "batch_provenance.jsonl": "be905b5c3cbe904e95fa1f9c5639a1493df5ef79fb9f19b1581d3003f70def03",
+    "causal_overview.pdf": "7dbc61a514bc88afd673d99de82fd0c177680abbec26d7122a875eb07d1aec49",
+    "causal_overview.png": "95080593fcb3ef9fff5914c476e39910b8099987dac577ad3374be5208843c44",
+    "critic_action_rows.csv": "02d5d97e0b7dc3c33932d6f1e30bfd0c406d3dc254b64cccf17e648cfb45843f",
+    "critic_perturbation_rows.csv": "21bd277468752e7d05869982d9ea745f4c0656680cd9cfe762e6d7fab9d7ecc5",
+    "fork_drift.csv": "21bf5dc3abbcd80cb27536d773bf2495aedf32720eee8323385637fd433bbaf1",
+    "paired_evaluation.csv": "d5fefff8390a4ab77bf541babcf7135f5afd759cb54c460efde0d9d0937468fa",
+    "plot_evidence.py": "058c761188e7bd6bb3a467d6bfe794df7cea493da0bafb04c2c61d23cf5013d2",
+    "probe_indices.json": "67127be7381f947aac31936dd0931a4dfef7fe058318535fb1717e3be0ba0e7a",
+    "pytest.txt": "ed2ffe63d44d390f297e36b6aa0f095a2ef60be73d3ec11263e1bf8bda28fd59",
+    "replay_composition.json": "aba3c5ef3fe084a03c1632aeba97246417b65b25404fd0c4e8b65fe1ee898793",
+    "restored_gradients.jsonl": "8db98311a25aba53a047b2595b2fe4f8efafc43d81e0314b22a47fb5431e75f5",
+    "results.json": "b217f2f1ea28885138fe1edd289de7a7d6ac173754bbe47d3e47973c665c41d9",
+    "snapshot_gradients.jsonl": "dc7c9286e7ac0fb36c36a974cc6cb7d0ac6ca4e80853622f6e9afaea2dd17d1e"
+  }
+}
