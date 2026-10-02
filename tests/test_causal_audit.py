@@ -281,3 +281,23 @@ def test_fixed_std_entropy_bound_and_mean_pressure_oppose_saturated_expert_actio
     assert torch.all(entropy_gradient[:7]>.039)
     assert torch.all(bc_gradient[:7]<0)
     assert torch.count_nonzero(entropy_gradient[7:])==torch.count_nonzero(bc_gradient[7:])==0
+
+
+def test_no_Q_actor_gradient_is_invariant_to_changing_critic_landscape(tmp_path):
+    from rel301m.training.causal_forks import diagnostic_update
+    torch.manual_seed(72)
+    first=tiny_model();second=tiny_model();second.load_state_dict(first.state_dict())
+    with torch.no_grad():
+        for critic in [second.q1,second.q2]:
+            for parameter in critic.parameters(): parameter.mul_(7)
+    _,_,episodes=synthetic_demos(tmp_path,first)
+    batch={key:torch.from_numpy(value[:4]) for key,value in episodes[0].items() if key in
+           ['o0','o1','s','a0','a1','r','next_o0','next_o1','next_s','done','timeout']}
+    start=rng_state()
+    diagnostic_update(first,batch,batch,'C_no_Q_actor_gradient')
+    restore_rng(start)
+    diagnostic_update(second,batch,batch,'C_no_Q_actor_gradient')
+    assert tree_hash(first.q1.state_dict())!=tree_hash(second.q1.state_dict())
+    for name,parameter in first.actors.state_dict().items():
+        assert torch.equal(parameter,second.actors.state_dict()[name]),name
+    assert tree_hash(first.actor_optimizers[0].state_dict())==tree_hash(second.actor_optimizers[0].state_dict())
