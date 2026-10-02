@@ -22,7 +22,7 @@ from .causal_forks import diagnostic_update, q_action_metrics
 from .causal_measurements import fixed_training_states, critic_audit
 
 
-VARIANTS=['restored','A_fixed_critic','B_fixed_actor','C_no_Q_actor_gradient','D_no_BC','snapshot']
+VARIANTS=['restored','A_fixed_critic','B_fixed_actor','C_no_Q_actor_gradient','D_no_BC','snapshot','E_no_entropy','F_BC_only']
 
 
 def compare_checkpoints(actual, expected):
@@ -52,7 +52,7 @@ def capture(config_path,root,historical):
     return summary
 
 
-def analyze(config_path,root):
+def analyze(config_path,root,variants=None):
     config=load_config(config_path)
     device='cuda' if torch.cuda.is_available() else 'cpu'
     torch.set_num_threads(config['torch_threads'])
@@ -81,9 +81,13 @@ def analyze(config_path,root):
     collapse_joint=torch.cat([bounded_mean(actor,fixed[f'o{i}']) for i,actor in enumerate(original100.actors)],dim=-1)
     eval_env=MultiAgentWrapper(make_two_arm_lift(PROJECT_ROOT/config['env_config'],seed=config['eval_seed']))
     eval_rng=deepcopy(eval_env._env.rng.bit_generator.state)
-    results={}
+    previous=json.loads((root/'results.json').read_text()) if (root/'results.json').exists() else {}
+    results=previous.get('forks',{})
+    for result in results.values():
+        result.setdefault('source_git_sha',previous.get('source_git_sha'))
+    source_sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     try:
-        for variant in VARIANTS:
+        for variant in (variants or VARIANTS):
             directory=root/variant
             directory.mkdir(parents=True,exist_ok=False)
             model,_=MASAC.load(trace.output/'before_first_update.pt',device=device)
@@ -97,7 +101,7 @@ def analyze(config_path,root):
                 batch={key:value.to(device) for key,value in item['batch'].items()}
                 demo={key:value.to(device) for key,value in item['demo_batch'].items()}
                 restore_rng(item['rng_before'])
-                progress.set_phase(variant)
+                if number==1 or number in [2,11]: progress.set_phase(variant)
                 update=diagnostic_update(model,batch,demo,variant)
                 row=dict(actor_update_window=number,**policy_probe(model,reference,probes),
                          optimizer_counts=model.optimizer_counts(),gradients=update['components'])
@@ -123,7 +127,7 @@ def analyze(config_path,root):
                     evaluations[str(number)]=summary
                     print(f'FORK {variant} update={number} ever={summary["success_rate"]} final={summary["final_success_rate"]}',flush=True)
             progress.finish('completed')
-            results[variant]=dict(initial_model_sha256=before_hash,initial_Q_sha256=before_q,
+            results[variant]=dict(source_git_sha=source_sha,initial_model_sha256=before_hash,initial_Q_sha256=before_q,
                 final_Q_sha256=tree_hash(dict(q1=model.q1.state_dict(),q2=model.q2.state_dict())),
                 initial_actor_sha256=before_actor,final_actor_sha256=tree_hash(model.actors.state_dict()),
                 evaluations=evaluations,final_drift={key:value for key,value in records[-1].items() if 'drift' in key or 'expert_mse' in key},
@@ -140,13 +144,13 @@ def analyze(config_path,root):
             (directory/'summary.json').write_text(json.dumps(results[variant],indent=2)+'\n')
             (root/'fork_results.json').write_text(json.dumps(results,indent=2)+'\n')
         print('Starting fixed-critic action-ranking and return-to-go audit',flush=True)
-        critic=critic_audit(trace,trace.output/'before_first_update.pt',PROJECT_ROOT/config['bc_checkpoint'],device)
+        critic=json.loads((root/'critic_results.json').read_text()) if (root/'critic_results.json').exists() else critic_audit(trace,trace.output/'before_first_update.pt',PROJECT_ROOT/config['bc_checkpoint'],device)
         (root/'critic_results.json').write_text(json.dumps(critic,indent=2)+'\n')
     finally:
         eval_env.close()
     rows=[json.loads(line) for line in (trace.output/'actor_updates.jsonl').read_text().splitlines()]
     consolidated=dict(source_git_sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
-        command=sys.argv,config=str(config_path),historical_capture=json.loads((root/'capture_checks.json').read_text()),
+        command=sys.argv,capture_source_git_sha=json.loads((root/'reproduction/metadata.json').read_text())['git_sha'],config=str(config_path),historical_capture=json.loads((root/'capture_checks.json').read_text()),
         first_update_checkpoint=str(trace.output/'before_first_update.pt'),first_100_exact_batches=str(trace.output),
         optimizer_validation=dict(max_delta_error=max(row['adam_expected_delta_max_error'] for row in rows),
             first_actor_states_empty=all(row['optimizer_state_empty_before'] for row in rows if row['actor_update']==1),
@@ -167,6 +171,7 @@ def main():
     parser.add_argument('--output-root',type=Path,required=True)
     parser.add_argument('--historical-dir',type=Path,default=Path('experiments/phase3/bc_finetune_10k_seed0'))
     parser.add_argument('--phase',choices=['capture','analyze','all'],default='all')
+    parser.add_argument('--variants',nargs='+',choices=VARIANTS,help='Run only these new diagnostic forks; existing directories are never overwritten')
     args=parser.parse_args()
     config=(PROJECT_ROOT/args.config).resolve()
     root=(PROJECT_ROOT/args.output_root).resolve()
@@ -174,7 +179,7 @@ def main():
         root.mkdir(parents=True,exist_ok=False)
         capture(config,root,(PROJECT_ROOT/args.historical_dir).resolve())
     if args.phase in ['analyze','all']:
-        analyze(config,root)
+        analyze(config,root,args.variants)
 
 
 if __name__=='__main__':

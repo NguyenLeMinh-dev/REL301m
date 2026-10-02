@@ -246,3 +246,16 @@ def test_remove_Q_fork_changes_only_actor_gradient_component(tmp_path):
     assert model.optimizer_counts()['actor_optimizer_updates_0']==1
     assert result['components'][0]['Q']['gradient_l2']>0
     assert model.config['fine_tune']['lambda_bc']==.5 and model.config['actor_lr']==3e-4
+
+
+@pytest.mark.parametrize('variant',['E_no_entropy','F_BC_only'])
+def test_additional_entropy_and_BC_only_diagnostics_keep_settings_and_counts(tmp_path,variant):
+    from rel301m.training.causal_forks import diagnostic_update
+    model=tiny_model();before=deepcopy(model.config)
+    _,_,episodes=synthetic_demos(tmp_path,model)
+    batch={key:torch.from_numpy(value[:4]) for key,value in episodes[0].items() if key in
+           ['o0','o1','s','a0','a1','r','next_o0','next_o1','next_s','done','timeout']}
+    diagnostic_update(model,batch,batch,variant)
+    assert model.config==before
+    assert model.optimizer_counts()==dict(critic_optimizer_updates=1,actor_optimizer_updates_0=1,
+        actor_optimizer_updates_1=1,actor_optimizer_steps_total=2,alpha_optimizer_updates=1)

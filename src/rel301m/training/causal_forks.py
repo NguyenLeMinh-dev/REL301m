@@ -8,7 +8,7 @@ from .causal_tools import component_gradient, cosine
 
 def diagnostic_update(model, batch, demo_batch, variant='restored', measure=True):
     """One controlled replay update; settings remain unchanged in model.config."""
-    allowed={'restored','A_fixed_critic','B_fixed_actor','C_no_Q_actor_gradient','D_no_BC','snapshot'}
+    allowed={'restored','A_fixed_critic','B_fixed_actor','C_no_Q_actor_gradient','D_no_BC','snapshot','E_no_entropy','F_BC_only'}
     if variant not in allowed:
         raise ValueError(f'Unknown diagnostic fork: {variant}')
     model.configure_log_std()
@@ -44,7 +44,14 @@ def diagnostic_update(model, batch, demo_batch, variant='restored', measure=True
                 predicted=actor.action_bias+actor.action_scale*mean.tanh()
                 bc=model.config['fine_tune']['lambda_bc']*F.mse_loss(predicted,demo_batch[f'a{i}'])
                 # Keep the original reduction/order in the restored control.
-                loss=entropy if variant=='C_no_Q_actor_gradient' else (model.alpha[i].detach()*log_prob-q).mean()
+                if variant=='C_no_Q_actor_gradient':
+                    loss=entropy
+                elif variant=='E_no_entropy':
+                    loss=q_term
+                elif variant=='F_BC_only':
+                    loss=torch.zeros((),device=model.device)
+                else:
+                    loss=(model.alpha[i].detach()*log_prob-q).mean()
                 if variant!='D_no_BC': loss=loss+bc
                 if measure:
                     q_vector,q_metrics=component_gradient(q_term,actor)
