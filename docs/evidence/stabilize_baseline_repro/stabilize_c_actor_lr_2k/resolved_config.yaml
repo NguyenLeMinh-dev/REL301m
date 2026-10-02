@@ -1,0 +1,49 @@
+name: stabilize_c_actor_lr
+algo_config: configs/algo/masac_lower_actor_lr.yaml
+env_config: configs/env/two_arm_lift.yaml
+bc_checkpoint: experiments/phase3/bc_seed42/best.pt
+seed: 0
+total_steps: 2000
+device: auto
+torch_threads: 1
+eval_interval: 1000
+eval_episodes: 10
+final_eval_episodes: 10
+eval_seed: 20000
+checkpoint_interval: 1000
+log_interval: 100
+output_root: experiments/phase3
+predictor:
+  architecture: GRU
+  hidden_size: 128
+  enabled: false
+audit:
+  dataset: data/demonstrations/two_arm_lift_scripted
+  interval_updates: 100
+  subset_size: 256
+  subset_seed: 20261002
+  early_eval_steps:
+  - 400
+  - 600
+  - 1400
+  - 1600
+  early_eval_episodes: 2
+  stochastic_eval_episodes: 2
+algo:
+  name: masac_lower_actor_lr
+  hidden_dims:
+  - 256
+  - 256
+  actor_lr: 3.0e-05
+  critic_lr: 0.0003
+  alpha_lr: 0.0003
+  gamma: 0.99
+  tau: 0.005
+  batch_size: 256
+  buffer_capacity: 300000
+  warmup_steps: 0
+  updates_per_step: 1
+  initial_alpha: 0.2
+  target_entropy: auto
+  bootstrap_time_limits: true
+progress: true

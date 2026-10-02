@@ -1,0 +1,3 @@
+environment_steps,mode,episodes,mean_return,success_rate,final_success_rate,initialization_sequence_sha256,critic_optimizer_updates,actor_optimizer_updates_0,actor_optimizer_updates_1,actor_optimizer_steps_total,alpha_optimizer_updates
+1000,deterministic,10,30.8480667185866,0.7,0.2,19841a3401962f77201c881bd1c5865b19aa9a104e7c42c02926d6ccedfd7721,2000,0,0,0,0
+1000,stochastic,2,24.977483432577706,0.5,0.5,a87d6cf9dc15e5472586ef8aa7fd16523cdd528bd9cc6295fb55cf557421fb10,2000,0,0,0,0

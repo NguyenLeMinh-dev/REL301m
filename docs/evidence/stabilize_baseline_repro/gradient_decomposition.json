@@ -1,0 +1,43 @@
+{
+  "checkpoint": "experiments/phase3/bc_finetune_10k_seed0/checkpoint_0001000.pt",
+  "gradient_probe_seed": 42,
+  "training_demo_only": true,
+  "optimizer_steps_executed": 0,
+  "caveat": "fixed demonstration batch, not reconstructed historical minibatch",
+  "agent_0": {
+    "negative_Q": {
+      "loss": 2.8730247020721436,
+      "gradient_l2": 17.088403701782227
+    },
+    "entropy": {
+      "loss": 0.4790131747722626,
+      "gradient_l2": 0.3834599256515503
+    },
+    "weighted_BC": {
+      "loss": 0.00014745986845809966,
+      "gradient_l2": 0.0107194222509861
+    },
+    "total": {
+      "loss": 3.3521852493286133,
+      "gradient_l2": 17.07680320739746
+    }
+  },
+  "agent_1": {
+    "negative_Q": {
+      "loss": 2.8509011268615723,
+      "gradient_l2": 32.6568717956543
+    },
+    "entropy": {
+      "loss": 0.4860740005970001,
+      "gradient_l2": 0.40731725096702576
+    },
+    "weighted_BC": {
+      "loss": 0.000549167103599757,
+      "gradient_l2": 0.01805669441819191
+    },
+    "total": {
+      "loss": 3.337524175643921,
+      "gradient_l2": 32.639793395996094
+    }
+  }
+}
